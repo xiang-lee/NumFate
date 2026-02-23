@@ -106,15 +106,61 @@ async function requestFortune({ apiBase, token, model, numbers }) {
     }),
   ])
 
+  const base = buildDeterministicFortune(numbers)
+  const blessings = toItems(blessingsRaw, base.blessings)
+  const cautions = toItems(cautionsRaw, base.cautions)
+
+  return {
+    title: pickText(title, base.title, 8),
+    overview: pickText(overview, base.overview, 24),
+    destiny: pickText(destiny, base.destiny, 28),
+    weekly: pickText(weekly, base.weekly, 26),
+    blessings: blessings.map((item, index) => pickText(item, base.blessings[index], 4)),
+    cautions: cautions.map((item, index) => pickText(item, base.cautions[index], 4)),
+    ritual: pickText(ritual, base.ritual, 18),
+  }
+}
+
+function buildDeterministicFortune(numbers) {
+  const sum = numbers.reduce((total, value) => total + value, 0)
+  const average = sum / numbers.length
+  const root = digitalRoot(Math.round(Math.abs(sum)))
+  const spread = Math.max(...numbers) - Math.min(...numbers)
+  const rootNames = {
+    1: '天启开锋',
+    2: '月镜同心',
+    3: '青木生辉',
+    4: '玄土定鼎',
+    5: '星河游侠',
+    6: '曜火成仪',
+    7: '雾海灵谕',
+    8: '金阙聚势',
+    9: '九曜归一',
+  }
+  const title = `${rootNames[root] || '命运之卷'}命盘`
+
   return {
     title,
-    overview,
-    destiny,
-    weekly,
-    blessings: toItems(blessingsRaw, ['顺势而行', '主动结缘', '保持节律']),
-    cautions: toItems(cautionsRaw, ['避免急躁', '远离口舌', '戒除拖延']),
-    ritual,
+    overview: `你的数字总和为 ${sum.toFixed(2)}，命盘主数落在 ${root}。这代表近期气机由散转聚，旧线索会重新串联，适合把长期目标重新立序。`,
+    destiny: `你属于“${rootNames[root] || '命运之卷'}”型命格，擅长在复杂局面中识别关键机会。数列振幅 ${spread.toFixed(2)}，意味着你越是主动整合资源，越能在竞争中占先。`,
+    weekly: `未来七日，前半段宜稳步推进、补齐细节；后半段适合对外沟通与争取支持。平均数 ${average.toFixed(2)} 显示贵人运偏强，真诚表达会带来回响。`,
+    blessings: ['晨起先定一件要事', '主动联系关键伙伴', '夜间复盘三行心得'],
+    cautions: ['避免情绪化决策', '不要同时开太多战线', '谨慎处理口头承诺'],
+    ritual: `今晚用纸写下一个三日目标与一个七日目标，折叠置于枕边。明晨读出并立即完成第一步，命势会更快成形。`,
   }
+}
+
+function digitalRoot(number) {
+  const safe = Math.max(1, Math.abs(Math.trunc(number)))
+  return ((safe - 1) % 9) + 1
+}
+
+function pickText(value, fallback, minLength) {
+  if (typeof value !== 'string') return fallback
+  const cleaned = value.trim()
+  if (cleaned.length < minLength) return fallback
+  if (/[，,、:：;；(（]$/.test(cleaned)) return fallback
+  return cleaned
 }
 
 async function askField({ apiBase, token, model, style, instruction, fallback, maxLength }) {
@@ -163,6 +209,10 @@ async function askField({ apiBase, token, model, style, instruction, fallback, m
 }
 
 function toItems(value, fallback) {
+  if (typeof value !== 'string') {
+    return fallback
+  }
+
   const items = value
     .split(/[|｜,，、\n]+/)
     .map((item) => item.trim())
