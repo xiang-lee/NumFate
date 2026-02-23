@@ -34,113 +34,150 @@ function sanitizeNumbers(input) {
 }
 
 async function requestFortune({ apiBase, token, model, numbers }) {
-  const prompt = [
-    '你是一位玄幻世界的命理师，擅长把数字映射为命运图景。',
-    '请根据用户数字生成中文结果，语气神秘但积极，不要恐吓。',
-    '必须返回 JSON，字段如下：',
-    '{',
-    '  "title": "12字以内标题",',
-    '  "overview": "2-3句总体判断",',
-    '  "destiny": "主命格解读，2-3句",',
-    '  "weekly": "未来七日运势，2-3句",',
-    '  "blessings": ["机缘建议1", "机缘建议2", "机缘建议3"],',
-    '  "cautions": ["避坑提醒1", "避坑提醒2", "避坑提醒3"],',
-    '  "ritual": "可执行的开运小仪式，1-2句"',
-    '}',
-    '总字数控制在 420 字以内。',
-    '不要输出 markdown，不要有额外字段。',
+  const sharedStyle = [
+    '你是玄幻命理师，语言神秘、有画面感，但保持积极。',
+    '严格按要求输出，不要 markdown，不要编号，不要解释。',
+    `用户数字: ${numbers.join(', ')}`,
   ].join('\n')
 
-  const payload = {
-    model,
-    temperature: 0.6,
-    max_tokens: 1200,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: prompt },
-      { role: 'user', content: `用户数字: ${numbers.join(', ')}` },
-    ],
-  }
-
-  const response = await fetch(`${apiBase}/v1/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  })
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`AI API error (${response.status}): ${text.slice(0, 200)}`)
-  }
-
-  const data = await response.json()
-  const content = data?.choices?.[0]?.message?.content
-  if (typeof content !== 'string' || content.trim().length === 0) {
-    throw new Error('AI API returned empty content.')
-  }
-
-  const parsed = safeParseJson(content)
-  if (!parsed) {
-    return {
-      title: '命运之卷',
-      overview: content.slice(0, 180),
-      destiny: content,
-      weekly: '星象晦明未定，建议明日再启命盘。',
-      blessings: ['晨起静心三分钟', '与重要之人坦诚沟通', '晚间记录灵感'],
-      cautions: ['避免冲动承诺', '暂缓高风险决定', '减少熬夜耗神'],
-      ritual: '将今天最在意的目标写在纸上，置于书桌左侧三日。',
-    }
-  }
+  const [title, overview, destiny, weekly, blessingsRaw, cautionsRaw, ritual] = await Promise.all([
+    askField({
+      apiBase,
+      token,
+      model,
+      style: sharedStyle,
+      instruction: '输出一个命盘标题，12字以内。',
+      fallback: '命运之卷',
+      maxLength: 20,
+    }),
+    askField({
+      apiBase,
+      token,
+      model,
+      style: sharedStyle,
+      instruction: '输出总体判断，2句以内，60字以内。',
+      fallback: '星图流转，天机已显。',
+      maxLength: 90,
+    }),
+    askField({
+      apiBase,
+      token,
+      model,
+      style: sharedStyle,
+      instruction: '输出主命格解读，2句以内，80字以内。',
+      fallback: '你的命格正在转旺。',
+      maxLength: 120,
+    }),
+    askField({
+      apiBase,
+      token,
+      model,
+      style: sharedStyle,
+      instruction: '输出未来七日运势，2句以内，80字以内。',
+      fallback: '未来七日宜稳中求进。',
+      maxLength: 120,
+    }),
+    askField({
+      apiBase,
+      token,
+      model,
+      style: sharedStyle,
+      instruction: '输出3条机缘建议，用|分隔，单条不超过12字。示例: 顺势而行|主动结缘|保持节律',
+      fallback: '顺势而行|主动结缘|保持节律',
+      maxLength: 120,
+    }),
+    askField({
+      apiBase,
+      token,
+      model,
+      style: sharedStyle,
+      instruction: '输出3条避坑提醒，用|分隔，单条不超过12字。示例: 避免急躁|远离口舌|戒除拖延',
+      fallback: '避免急躁|远离口舌|戒除拖延',
+      maxLength: 120,
+    }),
+    askField({
+      apiBase,
+      token,
+      model,
+      style: sharedStyle,
+      instruction: '输出开运小仪式，1-2句，60字以内。',
+      fallback: '今日子时前写下心愿，明早再读一遍。',
+      maxLength: 90,
+    }),
+  ])
 
   return {
-    title: ensureString(parsed.title, '命运之卷', 20),
-    overview: ensureString(parsed.overview, '星图流转，天机已显。', 220),
-    destiny: ensureString(parsed.destiny, '你的命格正在转旺。', 260),
-    weekly: ensureString(parsed.weekly, '未来七日宜稳中求进。', 260),
-    blessings: ensureArray(parsed.blessings, ['顺势而行', '主动结缘', '保持节律']),
-    cautions: ensureArray(parsed.cautions, ['避免急躁', '远离口舌', '戒除拖延']),
-    ritual: ensureString(parsed.ritual, '今日子时前写下心愿，明早再读一遍。', 180),
+    title,
+    overview,
+    destiny,
+    weekly,
+    blessings: toItems(blessingsRaw, ['顺势而行', '主动结缘', '保持节律']),
+    cautions: toItems(cautionsRaw, ['避免急躁', '远离口舌', '戒除拖延']),
+    ritual,
   }
 }
 
-function safeParseJson(content) {
-  const normalized = content
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/\s*```\s*$/i, '')
-    .trim()
-
+async function askField({ apiBase, token, model, style, instruction, fallback, maxLength }) {
   try {
-    return JSON.parse(normalized)
-  } catch {
-    const match = normalized.match(/\{[\s\S]*\}/)
-    if (!match) return null
-    try {
-      return JSON.parse(match[0])
-    } catch {
-      return null
-    }
-  }
-}
+    const response = await fetch(`${apiBase}/v1/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.6,
+        max_tokens: 260,
+        messages: [
+          { role: 'system', content: style },
+          { role: 'user', content: instruction },
+        ],
+      }),
+    })
 
-function ensureString(value, fallback, maxLength) {
-  if (typeof value !== 'string' || value.trim().length === 0) {
+    if (!response.ok) {
+      return fallback
+    }
+
+    const data = await response.json()
+    const content = data?.choices?.[0]?.message?.content
+    if (typeof content !== 'string') {
+      return fallback
+    }
+
+    const cleaned = content
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```\s*$/i, '')
+      .trim()
+
+    if (!cleaned) {
+      return fallback
+    }
+
+    return cleaned.slice(0, maxLength)
+  } catch {
     return fallback
   }
-  return value.trim().slice(0, maxLength)
 }
 
-function ensureArray(value, fallback) {
-  if (!Array.isArray(value)) return fallback
-  const cleaned = value
-    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+function toItems(value, fallback) {
+  const items = value
+    .split(/[|｜,，、\n]+/)
+    .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 3)
-  if (cleaned.length === 0) return fallback
-  return cleaned
+
+  if (items.length === 0) {
+    return fallback
+  }
+
+  while (items.length < 3) {
+    items.push(fallback[items.length])
+  }
+
+  return items
 }
 
 function json(data, status = 200) {
