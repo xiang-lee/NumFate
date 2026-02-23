@@ -47,13 +47,15 @@ async function requestFortune({ apiBase, token, model, numbers }) {
     '  "cautions": ["避坑提醒1", "避坑提醒2", "避坑提醒3"],',
     '  "ritual": "可执行的开运小仪式，1-2句"',
     '}',
+    '总字数控制在 420 字以内。',
     '不要输出 markdown，不要有额外字段。',
   ].join('\n')
 
   const payload = {
     model,
-    temperature: 0.9,
-    max_tokens: 900,
+    temperature: 0.6,
+    max_tokens: 1200,
+    response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: prompt },
       { role: 'user', content: `用户数字: ${numbers.join(', ')}` },
@@ -105,10 +107,16 @@ async function requestFortune({ apiBase, token, model, numbers }) {
 }
 
 function safeParseJson(content) {
+  const normalized = content
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```\s*$/i, '')
+    .trim()
+
   try {
-    return JSON.parse(content)
+    return JSON.parse(normalized)
   } catch {
-    const match = content.match(/\{[\s\S]*\}/)
+    const match = normalized.match(/\{[\s\S]*\}/)
     if (!match) return null
     try {
       return JSON.parse(match[0])
