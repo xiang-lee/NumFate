@@ -35,3 +35,4 @@ NumFate is a fantasy-styled numerology web app. Users enter several numbers, the
 - Build output directory: `dist`
 - Root directory: `NumFate`
 - Environment variables: set all three `AI_BUILDER_*` keys for Production and Preview
+- Git integration: project linked to `xiang-lee/NumFate` on branch `main`
