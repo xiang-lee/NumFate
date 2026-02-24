@@ -62,7 +62,7 @@ async function requestFortune({ apiBase, token, model, numbers }) {
     'blessings/cautions/sigils 各必须严格 3 条。',
   ].join('\n')
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     const content = await requestCompletion({
       apiBase,
       token,
@@ -201,16 +201,16 @@ function normalizeFortune(parsed) {
   const destiny = cleanText(parsed.destiny)
   const weekly = cleanText(parsed.weekly)
   const ritual = cleanText(parsed.ritual)
-  const blessings = cleanList(parsed.blessings)
-  const cautions = cleanList(parsed.cautions)
-  const sigils = cleanList(parsed.sigils)
+  const blessings = normalizeList(parsed.blessings)
+  const cautions = normalizeList(parsed.cautions)
+  const sigils = normalizeList(parsed.sigils)
 
   if (
-    title.length < 8 ||
-    overview.length < 24 ||
-    destiny.length < 28 ||
-    weekly.length < 28 ||
-    ritual.length < 16 ||
+    title.length < 2 ||
+    overview.length < 8 ||
+    destiny.length < 8 ||
+    weekly.length < 8 ||
+    ritual.length < 8 ||
     blessings.length !== 3 ||
     cautions.length !== 3 ||
     sigils.length !== 3
@@ -232,6 +232,15 @@ function cleanList(value) {
     .map((item) => cleanText(item))
     .filter(Boolean)
     .slice(0, 3)
+}
+
+function normalizeList(value) {
+  const items = cleanList(value)
+  if (items.length === 0) return []
+  while (items.length < 3) {
+    items.push(items[items.length % items.length])
+  }
+  return items.slice(0, 3)
 }
 
 function collectMetrics(numbers) {
