@@ -92,6 +92,7 @@ function toggleLoading(isLoading) {
 function renderFortune(data) {
   const blessings = Array.isArray(data.blessings) ? data.blessings : []
   const cautions = Array.isArray(data.cautions) ? data.cautions : []
+  const sigils = Array.isArray(data.sigils) ? data.sigils : []
 
   resultCard.classList.remove('hidden', 'error')
   resultCard.innerHTML = `
@@ -128,6 +129,17 @@ function renderFortune(data) {
       <h3>开运仪式</h3>
       <p>${escapeHtml(data.ritual || '')}</p>
     </article>
+
+    ${
+      sigils.length
+        ? `<article class="ritual">
+      <h3>命盘符印</h3>
+      <ul>
+        ${sigils.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+      </ul>
+    </article>`
+        : ''
+    }
   `
 }
 
