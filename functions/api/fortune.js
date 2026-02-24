@@ -86,6 +86,32 @@ async function requestFortune({ apiBase, token, model, numbers }) {
     if (normalized) {
       return normalized
     }
+
+    const repairedStructure = await requestCompletion({
+      apiBase,
+      token,
+      model,
+      temperature: 0.35,
+      maxTokens: 1400,
+      responseFormat: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content:
+            '将输入重写为符合指定结构的高质量命理解读 JSON。必须保留玄幻感且与数字绑定。只输出 JSON。',
+        },
+        {
+          role: 'user',
+          content: `数字: ${numbers.join(', ')}\n输入JSON:${JSON.stringify(parsed)}`,
+        },
+      ],
+    })
+
+    const repairedParsed = parseJsonObject(repairedStructure)
+    const repairedNormalized = repairedParsed ? normalizeFortune(repairedParsed) : null
+    if (repairedNormalized) {
+      return repairedNormalized
+    }
   }
 
   throw new Error('AI could not produce a valid fortune result. Please retry.')
@@ -181,10 +207,10 @@ function normalizeFortune(parsed) {
 
   if (
     title.length < 8 ||
-    overview.length < 36 ||
-    destiny.length < 40 ||
-    weekly.length < 40 ||
-    ritual.length < 20 ||
+    overview.length < 24 ||
+    destiny.length < 28 ||
+    weekly.length < 28 ||
+    ritual.length < 16 ||
     blessings.length !== 3 ||
     cautions.length !== 3 ||
     sigils.length !== 3
