@@ -62,77 +62,86 @@ async function requestFortune({ apiBase, token, model, numbers }) {
     'blessings/cautions/sigils 各必须严格 3 条。',
   ].join('\n')
 
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const content = await requestCompletion({
-      apiBase,
-      token,
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.9 + attempt * 0.05,
-      maxTokens: 1800,
-      responseFormat: { type: 'json_object' },
-    })
+  const content = await requestCompletion({
+    apiBase,
+    token,
+    model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.95,
+    maxTokens: 1300,
+    responseFormat: { type: 'json_object' },
+    timeoutMs: 18000,
+  })
 
-    const repaired = await repairJsonIfNeeded({ apiBase, token, model, content })
-    const parsed = parseJsonObject(repaired)
-    if (!parsed) {
-      continue
-    }
-
-    const normalized = normalizeFortune(parsed)
-    if (normalized) {
-      return normalized
-    }
-
-    const repairedStructure = await requestCompletion({
-      apiBase,
-      token,
-      model,
-      temperature: 0.35,
-      maxTokens: 1400,
-      responseFormat: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content:
-            '将输入重写为符合指定结构的高质量命理解读 JSON。必须保留玄幻感且与数字绑定。只输出 JSON。',
-        },
-        {
-          role: 'user',
-          content: `数字: ${numbers.join(', ')}\n输入JSON:${JSON.stringify(parsed)}`,
-        },
-      ],
-    })
-
-    const repairedParsed = parseJsonObject(repairedStructure)
-    const repairedNormalized = repairedParsed ? normalizeFortune(repairedParsed) : null
-    if (repairedNormalized) {
-      return repairedNormalized
-    }
+  const parsed = parseJsonObject(content)
+  const normalized = parsed ? normalizeFortune(parsed) : null
+  if (normalized) {
+    return normalized
   }
 
-  throw new Error('AI could not produce a valid fortune result. Please retry.')
+  const repaired = await requestCompletion({
+    apiBase,
+    token,
+    model,
+    temperature: 0.35,
+    maxTokens: 1100,
+    timeoutMs: 12000,
+    responseFormat: { type: 'json_object' },
+    messages: [
+      {
+        role: 'system',
+        content:
+          '你是 JSON 结构修复器。将输入内容重写为合法 JSON 对象，字段必须包含 title,overview,destiny,weekly,blessings,cautions,ritual,sigils。只输出 JSON。',
+      },
+      {
+        role: 'user',
+        content,
+      },
+    ],
+  })
+
+  const repairedParsed = parseJsonObject(repaired)
+  const repairedNormalized = repairedParsed ? normalizeFortune(repairedParsed) : null
+  if (repairedNormalized) {
+    return repairedNormalized
+  }
+
+  throw new Error('AI could not produce a valid fortune result in time. Please retry.')
 }
 
-async function requestCompletion({ apiBase, token, model, messages, temperature, maxTokens, responseFormat }) {
-  const response = await fetch(`${apiBase}/v1/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature,
-      max_tokens: maxTokens,
-      top_p: 0.95,
-      response_format: responseFormat,
-      messages,
-    }),
-  })
+async function requestCompletion({ apiBase, token, model, messages, temperature, maxTokens, responseFormat, timeoutMs }) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort('timeout'), timeoutMs)
+
+  let response
+  try {
+    response = await fetch(`${apiBase}/v1/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        model,
+        temperature,
+        max_tokens: maxTokens,
+        top_p: 0.95,
+        response_format: responseFormat,
+        messages,
+      }),
+      signal: controller.signal,
+    })
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new Error('AI request timeout. Please retry.')
+    }
+    throw error
+  } finally {
+    clearTimeout(timeoutId)
+  }
 
   if (!response.ok) {
     const text = await response.text()
@@ -146,31 +155,6 @@ async function requestCompletion({ apiBase, token, model, messages, temperature,
   }
 
   return content
-}
-
-async function repairJsonIfNeeded({ apiBase, token, model, content }) {
-  if (parseJsonObject(content)) {
-    return content
-  }
-
-  return requestCompletion({
-    apiBase,
-    token,
-    model,
-    temperature: 0.2,
-    maxTokens: 1200,
-    responseFormat: { type: 'json_object' },
-    messages: [
-      {
-        role: 'system',
-        content: '你是 JSON 修复器。将输入内容转换为合法 JSON 对象，只输出 JSON。不得增删字段。',
-      },
-      {
-        role: 'user',
-        content,
-      },
-    ],
-  })
 }
 
 function parseJsonObject(value) {
