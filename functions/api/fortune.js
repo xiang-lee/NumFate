@@ -130,6 +130,11 @@ async function requestFortune({ apiBase, token, model, numbers }) {
     return repairedNormalized
   }
 
+  const rawFallback = normalizeRawFortune(`${content}\n${repaired}`)
+  if (rawFallback) {
+    return rawFallback
+  }
+
   throw new Error('AI could not produce a valid fortune result in time. Please retry.')
 }
 
@@ -201,14 +206,15 @@ function parseJsonObject(value) {
 }
 
 function normalizeFortune(parsed) {
-  const title = cleanText(parsed.title)
-  const overview = cleanText(parsed.overview)
-  const destiny = cleanText(parsed.destiny)
-  const weekly = cleanText(parsed.weekly)
-  const ritual = cleanText(parsed.ritual)
-  const blessings = normalizeList(parsed.blessings)
-  const cautions = normalizeList(parsed.cautions)
-  const sigils = normalizeList(parsed.sigils)
+  const sourceText = mergedText(parsed)
+  const title = pickText([parsed.title, sentenceAt(sourceText, 0), sentenceAt(sourceText, 1)], 2, 24)
+  const overview = pickText([parsed.overview, sentenceBlock(sourceText, 0, 2), sourceText], 8, 260)
+  const destiny = pickText([parsed.destiny, sentenceBlock(sourceText, 2, 4), sourceText], 8, 320)
+  const weekly = pickText([parsed.weekly, sentenceBlock(sourceText, 4, 6), sourceText], 8, 320)
+  const ritual = pickText([parsed.ritual, sentenceBlock(sourceText, 6, 8), sourceText], 8, 220)
+  const blessings = normalizeList(parsed.blessings, sourceText)
+  const cautions = normalizeList(parsed.cautions, sourceText)
+  const sigils = normalizeList(parsed.sigils, sourceText)
 
   if (
     title.length < 2 ||
@@ -226,6 +232,33 @@ function normalizeFortune(parsed) {
   return { title, overview, destiny, weekly, blessings, cautions, ritual, sigils }
 }
 
+function normalizeRawFortune(raw) {
+  const text = cleanText(raw)
+  if (!text) return null
+
+  const title = sentenceAt(text, 0).slice(0, 24)
+  const overview = sentenceBlock(text, 0, 2)
+  const destiny = sentenceBlock(text, 2, 5)
+  const weekly = sentenceBlock(text, 5, 8)
+  const ritual = sentenceBlock(text, 8, 10)
+  const list = listFromText(text)
+
+  if (!title || !overview || !destiny || !weekly || !ritual || list.length === 0) {
+    return null
+  }
+
+  return {
+    title,
+    overview,
+    destiny,
+    weekly,
+    blessings: completeThree(list),
+    cautions: completeThree([...list].reverse()),
+    ritual,
+    sigils: completeThree(list.map((item) => item.slice(0, 12))),
+  }
+}
+
 function cleanText(value) {
   if (typeof value !== 'string') return ''
   return value.replace(/\s+/g, ' ').trim()
@@ -239,13 +272,66 @@ function cleanList(value) {
     .slice(0, 3)
 }
 
-function normalizeList(value) {
+function normalizeList(value, sourceText) {
   const items = cleanList(value)
-  if (items.length === 0) return []
-  while (items.length < 3) {
-    items.push(items[items.length % items.length])
+  if (items.length === 0 && typeof value === 'string') {
+    items.push(...listFromText(value))
   }
-  return items.slice(0, 3)
+  if (items.length === 0) {
+    items.push(...listFromText(sourceText))
+  }
+  if (items.length === 0) return []
+  return completeThree(items)
+}
+
+function completeThree(items) {
+  const output = items.filter(Boolean).slice(0, 3)
+  while (output.length < 3) {
+    output.push(output[output.length % output.length])
+  }
+  return output
+}
+
+function listFromText(text) {
+  return cleanText(text)
+    .split(/[。！？!?.;；，,、\n]/)
+    .map((part) => part.trim())
+    .filter((part) => part.length >= 4)
+    .slice(0, 3)
+}
+
+function sentenceAt(text, index) {
+  return sentences(text)[index] || ''
+}
+
+function sentenceBlock(text, start, end) {
+  const group = sentences(text).slice(start, end).join('。').trim()
+  return group || sentenceAt(text, start)
+}
+
+function sentences(text) {
+  return cleanText(text)
+    .split(/[。！？!?.]/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
+function pickText(candidates, minLength, maxLength) {
+  for (const candidate of candidates) {
+    const cleaned = cleanText(candidate)
+    if (cleaned.length >= minLength) {
+      return cleaned.slice(0, maxLength)
+    }
+  }
+  return ''
+}
+
+function mergedText(parsed) {
+  const values = Object.values(parsed)
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .map((value) => cleanText(value))
+    .filter(Boolean)
+  return values.join('。')
 }
 
 function collectMetrics(numbers) {
