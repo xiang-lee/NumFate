@@ -62,19 +62,40 @@ async function requestFortune({ apiBase, token, model, numbers }) {
     'blessings/cautions/sigils 各必须严格 3 条。',
   ].join('\n')
 
-  const content = await requestCompletion({
-    apiBase,
-    token,
-    model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-    ],
-    temperature: 0.95,
-    maxTokens: 1300,
-    responseFormat: { type: 'json_object' },
-    timeoutMs: 18000,
-  })
+  let content
+  try {
+    content = await requestCompletion({
+      apiBase,
+      token,
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.95,
+      maxTokens: 1000,
+      responseFormat: { type: 'json_object' },
+      timeoutMs: 45000,
+    })
+  } catch (error) {
+    if (!String(error?.message || '').includes('timeout')) {
+      throw error
+    }
+
+    content = await requestCompletion({
+      apiBase,
+      token,
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `${userPrompt}\n请缩短内容，控制在 500 字以内。` },
+      ],
+      temperature: 0.8,
+      maxTokens: 700,
+      responseFormat: { type: 'json_object' },
+      timeoutMs: 30000,
+    })
+  }
 
   const parsed = parseJsonObject(content)
   const normalized = parsed ? normalizeFortune(parsed) : null
@@ -88,7 +109,7 @@ async function requestFortune({ apiBase, token, model, numbers }) {
     model,
     temperature: 0.35,
     maxTokens: 1100,
-    timeoutMs: 12000,
+    timeoutMs: 20000,
     responseFormat: { type: 'json_object' },
     messages: [
       {
