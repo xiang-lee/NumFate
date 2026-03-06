@@ -3,7 +3,11 @@ const DEFAULT_MODEL = 'gemini-3-flash-preview'
 
 export async function onRequestPost(context) {
   try {
-    const body = await context.request.json()
+    const { body, errorResponse } = await parseRequestBody(context.request)
+    if (errorResponse) {
+      return errorResponse
+    }
+
     const numbers = sanitizeNumbers(body?.numbers)
 
     if (numbers.length < 2 || numbers.length > 12) {
@@ -22,6 +26,18 @@ export async function onRequestPost(context) {
     return json(completion)
   } catch (error) {
     return json({ error: error.message || 'Unexpected error.' }, 500)
+  }
+}
+
+async function parseRequestBody(request) {
+  try {
+    const body = await request.json()
+    return { body, errorResponse: null }
+  } catch {
+    return {
+      body: null,
+      errorResponse: json({ error: 'Request body must be valid JSON.' }, 400),
+    }
   }
 }
 
