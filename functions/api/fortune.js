@@ -362,7 +362,8 @@ function collectMetrics(numbers) {
   const oddCount = numbers.filter((n) => Math.abs(Math.round(n)) % 2 === 1).length
   const evenCount = numbers.length - oddCount
   const primeCount = numbers.filter((n) => isPrime(Math.abs(Math.round(n)))).length
-  const digitalRoot = ((Math.abs(Math.round(sum)) - 1) % 9 + 9) % 9 + 1
+  const roundedSum = Math.abs(Math.round(sum))
+  const digitalRoot = roundedSum === 0 ? 0 : ((roundedSum - 1) % 9) + 1
 
   return {
     count: numbers.length,
@@ -375,6 +376,10 @@ function collectMetrics(numbers) {
     primeCount,
     digitalRoot,
   }
+}
+
+export const __testables = {
+  collectMetrics,
 }
 
 function isPrime(value) {

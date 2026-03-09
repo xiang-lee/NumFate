@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { onRequestPost } from '../functions/api/fortune.js'
+import { __testables, onRequestPost } from '../functions/api/fortune.js'
 
 test('returns 400 when request body is invalid JSON', async () => {
   const context = {
@@ -35,4 +35,18 @@ test('returns 500 when token is missing for valid JSON body', async () => {
 
   assert.equal(response.status, 500)
   assert.equal(payload.error, 'AI token is not configured.')
+})
+
+test('collectMetrics keeps digital root at 0 when rounded sum is 0', () => {
+  const metrics = __testables.collectMetrics([-4, 4, 0.2, -0.2])
+
+  assert.equal(metrics.sum, 0)
+  assert.equal(metrics.digitalRoot, 0)
+})
+
+test('collectMetrics still computes non-zero digital roots correctly', () => {
+  const metrics = __testables.collectMetrics([9, 27, 108])
+
+  assert.equal(metrics.sum, 144)
+  assert.equal(metrics.digitalRoot, 9)
 })
