@@ -44,9 +44,25 @@ async function parseRequestBody(request) {
 function sanitizeNumbers(input) {
   if (!Array.isArray(input)) return []
   return input
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value))
+    .map(parseNumber)
+    .filter((value) => value !== null)
     .map((value) => Number(value.toFixed(6)))
+}
+
+function parseNumber(value) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+
+  if (typeof value !== 'string') return null
+
+  const text = value.trim()
+  if (!text || !/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(text)) {
+    return null
+  }
+
+  const parsed = Number(text)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 async function requestFortune({ apiBase, token, model, numbers }) {
@@ -380,6 +396,7 @@ function collectMetrics(numbers) {
 
 export const __testables = {
   collectMetrics,
+  sanitizeNumbers,
 }
 
 function isPrime(value) {
