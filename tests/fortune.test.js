@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
+import { parseInput } from '../src/numbers.js'
 
 test('returns 400 when request body is invalid JSON', async () => {
   const context = {
@@ -72,4 +73,11 @@ test('returns 400 when payload relies on boolean or null coercion', async () => 
 
   assert.equal(response.status, 400)
   assert.equal(payload.error, 'Please provide between 2 and 12 numbers.')
+})
+
+test('parseInput reports invalid manual entries instead of dropping them', () => {
+  const parsed = parseInput('9, abc, 27\n1e3  .5  0x10')
+
+  assert.deepEqual(parsed.values, [9, 27, 0.5])
+  assert.deepEqual(parsed.invalid, ['abc', '1e3', '0x10'])
 })

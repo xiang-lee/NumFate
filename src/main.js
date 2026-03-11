@@ -1,4 +1,5 @@
 import './style.css'
+import { parseInput } from './numbers.js'
 
 const app = document.querySelector('#app')
 
@@ -45,7 +46,13 @@ const resultCard = document.querySelector('#result')
 form.addEventListener('submit', async (event) => {
   event.preventDefault()
 
-  const values = parseNumbers(input.value)
+  const parsed = parseInput(input.value)
+  if (parsed.invalid.length > 0) {
+    renderError(`发现无效数字: ${formatInvalid(parsed.invalid)}。请只输入普通数字。`)
+    return
+  }
+
+  const values = parsed.values
   if (values.length < 2 || values.length > 12) {
     renderError('请输入 2 到 12 个数字，再开始推演。')
     return
@@ -75,18 +82,14 @@ form.addEventListener('submit', async (event) => {
   }
 })
 
-function parseNumbers(raw) {
-  return raw
-    .split(/[\s,，、]+/)
-    .map((piece) => piece.trim())
-    .filter(Boolean)
-    .map((piece) => Number(piece))
-    .filter((value) => Number.isFinite(value))
-}
-
 function toggleLoading(isLoading) {
   submitButton.disabled = isLoading
   submitButton.textContent = isLoading ? '命盘推演中...' : '开启命盘推演'
+}
+
+function formatInvalid(list) {
+  const shown = list.slice(0, 3).join('、')
+  return list.length > 3 ? `${shown} 等 ${list.length} 项` : shown
 }
 
 function renderFortune(data) {
