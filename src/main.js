@@ -29,7 +29,7 @@ app.innerHTML = `
             required
           ></textarea>
         </div>
-        <p class="hint">可输入 2-12 个数字，支持逗号、空格或换行分隔。</p>
+        <p id="input-feedback" class="hint" aria-live="polite">可输入 2-12 个数字，支持逗号、空格或换行分隔。</p>
         <button type="submit" id="submit-btn">开启命盘推演</button>
       </form>
 
@@ -41,7 +41,12 @@ app.innerHTML = `
 const form = document.querySelector('#fortune-form')
 const input = document.querySelector('#numbers')
 const submitButton = document.querySelector('#submit-btn')
+const feedback = document.querySelector('#input-feedback')
 const resultCard = document.querySelector('#result')
+
+input.addEventListener('input', () => {
+  renderFeedback(parseInput(input.value))
+})
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault()
@@ -82,6 +87,8 @@ form.addEventListener('submit', async (event) => {
   }
 })
 
+renderFeedback(parseInput(input.value))
+
 function toggleLoading(isLoading) {
   submitButton.disabled = isLoading
   submitButton.textContent = isLoading ? '命盘推演中...' : '开启命盘推演'
@@ -90,6 +97,36 @@ function toggleLoading(isLoading) {
 function formatInvalid(list) {
   const shown = list.slice(0, 3).join('、')
   return list.length > 3 ? `${shown} 等 ${list.length} 项` : shown
+}
+
+function renderFeedback(parsed) {
+  const count = parsed.values.length
+  if (!feedback) return
+
+  feedback.classList.toggle('hint-error', parsed.invalid.length > 0)
+  feedback.classList.toggle('hint-ok', parsed.invalid.length === 0 && count >= 2 && count <= 12)
+
+  if (parsed.invalid.length > 0) {
+    feedback.textContent = `已识别 ${count} 个有效数字；发现无效项：${formatInvalid(parsed.invalid)}。`
+    return
+  }
+
+  if (count === 0) {
+    feedback.textContent = '可输入 2-12 个数字，支持逗号、空格或换行分隔。'
+    return
+  }
+
+  if (count < 2) {
+    feedback.textContent = `目前识别到 ${count} 个数字，再输入 ${2 - count} 个即可开始推演。`
+    return
+  }
+
+  if (count > 12) {
+    feedback.textContent = `目前识别到 ${count} 个数字，超出上限 ${count - 12} 个。请精简后再推演。`
+    return
+  }
+
+  feedback.textContent = `已识别 ${count} 个有效数字，可以开始推演。`
 }
 
 function renderFortune(data) {

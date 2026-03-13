@@ -81,3 +81,10 @@ test('parseInput reports invalid manual entries instead of dropping them', () =>
   assert.deepEqual(parsed.values, [9, 27, 0.5])
   assert.deepEqual(parsed.invalid, ['abc', '1e3', '0x10'])
 })
+
+test('parseInput keeps all valid entries so the UI can detect overflow before submit', () => {
+  const parsed = parseInput('1 2 3 4 5 6 7 8 9 10 11 12 13')
+
+  assert.equal(parsed.values.length, 13)
+  assert.deepEqual(parsed.invalid, [])
+})
