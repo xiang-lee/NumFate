@@ -1,4 +1,5 @@
 import './style.css'
+import { formatFortuneText } from './fortune-text.js'
 import { parseInput } from './numbers.js'
 
 const app = document.querySelector('#app')
@@ -140,6 +141,9 @@ function renderFortune(data) {
       <p class="result-kicker">天机已现</p>
       <h2>${escapeHtml(data.title || '命运之卷')}</h2>
       <p>${escapeHtml(data.overview || '')}</p>
+      <div class="result-actions">
+        <button type="button" class="copy-btn" id="copy-result-btn">复制命盘结果</button>
+      </div>
     </div>
 
     <div class="result-grid">
@@ -181,6 +185,47 @@ function renderFortune(data) {
         : ''
     }
   `
+
+  const copy = document.querySelector('#copy-result-btn')
+  copy?.addEventListener('click', () => copyResult(data, copy))
+}
+
+async function copyResult(data, button) {
+  const text = formatFortuneText(data)
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+    } else {
+      fallbackCopy(text)
+    }
+    flashCopy(button, '已复制')
+  } catch {
+    flashCopy(button, '复制失败')
+  }
+}
+
+function fallbackCopy(text) {
+  const area = document.createElement('textarea')
+  area.value = text
+  area.setAttribute('readonly', 'true')
+  area.style.position = 'absolute'
+  area.style.left = '-9999px'
+  document.body.append(area)
+  area.select()
+  document.execCommand('copy')
+  area.remove()
+}
+
+function flashCopy(button, text) {
+  if (!button) return
+  const prev = button.textContent
+  button.textContent = text
+  button.disabled = true
+  setTimeout(() => {
+    button.textContent = prev
+    button.disabled = false
+  }, 1600)
 }
 
 function renderError(message) {

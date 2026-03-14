@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
+import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
 
 test('returns 400 when request body is invalid JSON', async () => {
@@ -87,4 +88,22 @@ test('parseInput keeps all valid entries so the UI can detect overflow before su
 
   assert.equal(parsed.values.length, 13)
   assert.deepEqual(parsed.invalid, [])
+})
+
+test('formatFortuneText turns a reading into shareable plain text', () => {
+  const text = formatFortuneText({
+    title: '星河命卷',
+    overview: '今夜星轨偏东，宜聚焦真正重要的事。',
+    destiny: '你近期的主线是收拢分散精力。',
+    weekly: '未来七日适合先定节奏，再做扩张。',
+    blessings: ['贵人回应更快', '适合整理计划', '适合开启新尝试'],
+    cautions: ['避免同时开太多线', '减少情绪化决定', '别忽略睡眠'],
+    ritual: '今晚写下三件最重要的事，并先完成第一件。',
+    sigils: ['辰光', '定风', '曜心'],
+  })
+
+  assert.match(text, /【星河命卷】/)
+  assert.match(text, /主命格：你近期的主线是收拢分散精力。/)
+  assert.match(text, /机缘加持：\n- 贵人回应更快/)
+  assert.match(text, /命盘符印：\n- 辰光/)
 })
