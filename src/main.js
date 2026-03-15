@@ -1,6 +1,7 @@
 import './style.css'
 import { formatFortuneText } from './fortune-text.js'
 import { parseInput } from './numbers.js'
+import { preset } from './presets.js'
 
 const app = document.querySelector('#app')
 
@@ -30,6 +31,12 @@ app.innerHTML = `
             required
           ></textarea>
         </div>
+        <div class="preset-row" aria-label="快速填充示例">
+          <button type="button" class="preset-btn" data-preset="birthday">生日示例</button>
+          <button type="button" class="preset-btn" data-preset="lucky">幸运数字</button>
+          <button type="button" class="preset-btn" data-preset="work">事业节奏</button>
+          <button type="button" class="preset-btn" data-preset="clear">清空</button>
+        </div>
         <p id="input-feedback" class="hint" aria-live="polite">可输入 2-12 个数字，支持逗号、空格或换行分隔。</p>
         <button type="submit" id="submit-btn">开启命盘推演</button>
       </form>
@@ -44,9 +51,14 @@ const input = document.querySelector('#numbers')
 const submitButton = document.querySelector('#submit-btn')
 const feedback = document.querySelector('#input-feedback')
 const resultCard = document.querySelector('#result')
+const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
 
 input.addEventListener('input', () => {
   renderFeedback(parseInput(input.value))
+})
+
+presetButtons.forEach((button) => {
+  button.addEventListener('click', () => applyPreset(button.dataset.preset || ''))
 })
 
 form.addEventListener('submit', async (event) => {
@@ -128,6 +140,12 @@ function renderFeedback(parsed) {
   }
 
   feedback.textContent = `已识别 ${count} 个有效数字，可以开始推演。`
+}
+
+function applyPreset(id) {
+  input.value = id === 'clear' ? '' : preset(id)
+  input.focus()
+  renderFeedback(parseInput(input.value))
 }
 
 function renderFortune(data) {

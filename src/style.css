@@ -156,6 +156,29 @@ textarea:focus-visible {
   color: #9fadca;
 }
 
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.preset-btn {
+  width: auto;
+  margin-top: 0;
+  padding: 0.45rem 0.75rem;
+  border-color: rgba(196, 158, 85, 0.4);
+  background: rgba(9, 17, 35, 0.62);
+  color: var(--ink-main);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+}
+
+.preset-btn:hover {
+  box-shadow: 0 7px 18px rgba(64, 105, 168, 0.18);
+}
+
 .hint-ok {
   color: #b8d7a4;
 }

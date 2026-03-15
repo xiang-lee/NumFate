@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
+import { ids, preset } from '../src/presets.js'
 
 test('returns 400 when request body is invalid JSON', async () => {
   const context = {
@@ -106,4 +107,11 @@ test('formatFortuneText turns a reading into shareable plain text', () => {
   assert.match(text, /主命格：你近期的主线是收拢分散精力。/)
   assert.match(text, /机缘加持：\n- 贵人回应更快/)
   assert.match(text, /命盘符印：\n- 辰光/)
+})
+
+test('presets expose quick-fill examples for the form', () => {
+  assert.deepEqual(ids(), ['birthday', 'lucky', 'work'])
+  assert.equal(preset('birthday'), '1994, 07, 16')
+  assert.equal(preset('lucky'), '9, 27, 108, 1314')
+  assert.equal(preset('missing'), '')
 })
