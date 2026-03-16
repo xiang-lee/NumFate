@@ -94,6 +94,7 @@ test('parseInput keeps all valid entries so the UI can detect overflow before su
 test('formatFortuneText turns a reading into shareable plain text', () => {
   const text = formatFortuneText({
     title: '星河命卷',
+    numbers: [9, 27, 108],
     overview: '今夜星轨偏东，宜聚焦真正重要的事。',
     destiny: '你近期的主线是收拢分散精力。',
     weekly: '未来七日适合先定节奏，再做扩张。',
@@ -104,6 +105,7 @@ test('formatFortuneText turns a reading into shareable plain text', () => {
   })
 
   assert.match(text, /【星河命卷】/)
+  assert.match(text, /推演数字：9, 27, 108/)
   assert.match(text, /主命格：你近期的主线是收拢分散精力。/)
   assert.match(text, /机缘加持：\n- 贵人回应更快/)
   assert.match(text, /命盘符印：\n- 辰光/)

@@ -92,7 +92,7 @@ form.addEventListener('submit', async (event) => {
       throw new Error(payload.error || '命盘推演失败，请稍后再试。')
     }
 
-    renderFortune(payload)
+    renderFortune(payload, values)
   } catch (error) {
     renderError(error.message || '命盘推演失败，请稍后再试。')
   } finally {
@@ -148,16 +148,24 @@ function applyPreset(id) {
   renderFeedback(parseInput(input.value))
 }
 
-function renderFortune(data) {
+function renderFortune(data, numbers) {
   const blessings = Array.isArray(data.blessings) ? data.blessings : []
   const cautions = Array.isArray(data.cautions) ? data.cautions : []
   const sigils = Array.isArray(data.sigils) ? data.sigils : []
+  const numberLabels = Array.isArray(numbers) ? numbers.map((item) => escapeHtml(String(item))) : []
 
   resultCard.classList.remove('hidden', 'error')
   resultCard.innerHTML = `
     <div class="result-header">
       <p class="result-kicker">天机已现</p>
       <h2>${escapeHtml(data.title || '命运之卷')}</h2>
+      ${
+        numberLabels.length
+          ? `<div class="result-numbers"><span>本次推演数字</span><div class="number-chips">${numberLabels
+              .map((item) => `<span class="number-chip">${item}</span>`)
+              .join('')}</div></div>`
+          : ''
+      }
       <p>${escapeHtml(data.overview || '')}</p>
       <div class="result-actions">
         <button type="button" class="copy-btn" id="copy-result-btn">复制命盘结果</button>
@@ -205,11 +213,11 @@ function renderFortune(data) {
   `
 
   const copy = document.querySelector('#copy-result-btn')
-  copy?.addEventListener('click', () => copyResult(data, copy))
+  copy?.addEventListener('click', () => copyResult(data, numbers, copy))
 }
 
-async function copyResult(data, button) {
-  const text = formatFortuneText(data)
+async function copyResult(data, numbers, button) {
+  const text = formatFortuneText({ ...data, numbers })
 
   try {
     if (navigator.clipboard?.writeText) {
