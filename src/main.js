@@ -2,6 +2,7 @@ import './style.css'
 import { formatFortuneText } from './fortune-text.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
+import { isSubmitShortcut } from './shortcut.js'
 
 const app = document.querySelector('#app')
 
@@ -28,6 +29,7 @@ app.innerHTML = `
             name="numbers"
             rows="3"
             placeholder="例如: 9, 27, 108, 1314"
+            aria-keyshortcuts="Control+Enter Meta+Enter"
             required
           ></textarea>
         </div>
@@ -55,6 +57,12 @@ const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
 
 input.addEventListener('input', () => {
   renderFeedback(parseInput(input.value))
+})
+
+input.addEventListener('keydown', (event) => {
+  if (!isSubmitShortcut(event) || submitButton.disabled) return
+  event.preventDefault()
+  form.requestSubmit()
 })
 
 presetButtons.forEach((button) => {
@@ -125,7 +133,7 @@ function renderFeedback(parsed) {
   }
 
   if (count === 0) {
-    feedback.textContent = '可输入 2-12 个数字，支持逗号、空格或换行分隔。'
+    feedback.textContent = '可输入 2-12 个数字，支持逗号、空格或换行分隔；按 Ctrl/Cmd + Enter 可快速推演。'
     return
   }
 
@@ -139,7 +147,7 @@ function renderFeedback(parsed) {
     return
   }
 
-  feedback.textContent = `已识别 ${count} 个有效数字，可以开始推演。`
+  feedback.textContent = `已识别 ${count} 个有效数字，可以开始推演；按 Ctrl/Cmd + Enter 可快速推演。`
 }
 
 function applyPreset(id) {

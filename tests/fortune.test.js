@@ -5,6 +5,7 @@ import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
+import { isSubmitShortcut } from '../src/shortcut.js'
 
 test('returns 400 when request body is invalid JSON', async () => {
   const context = {
@@ -116,4 +117,13 @@ test('presets expose quick-fill examples for the form', () => {
   assert.equal(preset('birthday'), '1994, 07, 16')
   assert.equal(preset('lucky'), '9, 27, 108, 1314')
   assert.equal(preset('missing'), '')
+})
+
+test('isSubmitShortcut only accepts ctrl/cmd enter without composition or shift', () => {
+  assert.equal(isSubmitShortcut({ key: 'Enter', ctrlKey: true, metaKey: false, shiftKey: false, isComposing: false }), true)
+  assert.equal(isSubmitShortcut({ key: 'Enter', ctrlKey: false, metaKey: true, shiftKey: false, isComposing: false }), true)
+  assert.equal(isSubmitShortcut({ key: 'Enter', ctrlKey: false, metaKey: false, shiftKey: false, isComposing: false }), false)
+  assert.equal(isSubmitShortcut({ key: 'Enter', ctrlKey: true, metaKey: false, shiftKey: true, isComposing: false }), false)
+  assert.equal(isSubmitShortcut({ key: 'Enter', ctrlKey: true, metaKey: false, shiftKey: false, isComposing: true }), false)
+  assert.equal(isSubmitShortcut({ key: 'a', ctrlKey: true, metaKey: false, shiftKey: false, isComposing: false }), false)
 })
