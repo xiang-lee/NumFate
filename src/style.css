@@ -231,6 +231,16 @@ button:disabled {
   margin-top: 0.9rem;
 }
 
+.stale-note {
+  margin-top: 0.7rem;
+  color: #f3c27d;
+  font-size: 0.85rem;
+}
+
+.stale-note.hidden {
+  display: none;
+}
+
 .result-numbers {
   margin-top: 0.8rem;
 }
@@ -324,6 +334,10 @@ ul {
 .result-card.error {
   border-color: rgba(243, 168, 120, 0.78);
   color: var(--danger);
+}
+
+.result-card.stale {
+  border-color: rgba(243, 194, 125, 0.78);
 }
 
 @keyframes riseIn {

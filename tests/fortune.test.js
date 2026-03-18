@@ -5,6 +5,7 @@ import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
+import { isResultStale } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
 
 test('returns 400 when request body is invalid JSON', async () => {
@@ -117,6 +118,14 @@ test('presets expose quick-fill examples for the form', () => {
   assert.equal(preset('birthday'), '1994, 07, 16')
   assert.equal(preset('lucky'), '9, 27, 108, 1314')
   assert.equal(preset('missing'), '')
+})
+
+test('isResultStale detects when current input no longer matches shown result', () => {
+  assert.equal(isResultStale([9, 27, 108], [9, 27, 108], false), false)
+  assert.equal(isResultStale([9, 27], [9, 27, 108], false), true)
+  assert.equal(isResultStale([9, 28, 108], [9, 27, 108], false), true)
+  assert.equal(isResultStale([9, 27, 108], [9, 27, 108], true), true)
+  assert.equal(isResultStale([], [], false), false)
 })
 
 test('isSubmitShortcut only accepts ctrl/cmd enter without composition or shift', () => {

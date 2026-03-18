@@ -2,6 +2,7 @@ import './style.css'
 import { formatFortuneText } from './fortune-text.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
+import { isResultStale } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
 
 const app = document.querySelector('#app')
@@ -54,9 +55,12 @@ const submitButton = document.querySelector('#submit-btn')
 const feedback = document.querySelector('#input-feedback')
 const resultCard = document.querySelector('#result')
 const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
+let lastSubmittedNumbers = []
 
 input.addEventListener('input', () => {
-  renderFeedback(parseInput(input.value))
+  const parsed = parseInput(input.value)
+  renderFeedback(parsed)
+  syncResultState(parsed)
 })
 
 input.addEventListener('keydown', (event) => {
@@ -153,7 +157,9 @@ function renderFeedback(parsed) {
 function applyPreset(id) {
   input.value = id === 'clear' ? '' : preset(id)
   input.focus()
-  renderFeedback(parseInput(input.value))
+  const parsed = parseInput(input.value)
+  renderFeedback(parsed)
+  syncResultState(parsed)
 }
 
 function renderFortune(data, numbers) {
@@ -167,6 +173,7 @@ function renderFortune(data, numbers) {
     <div class="result-header">
       <p class="result-kicker">天机已现</p>
       <h2>${escapeHtml(data.title || '命运之卷')}</h2>
+      <p id="result-stale-note" class="stale-note hidden">输入已变更，当前结果基于上一组数字。重新推演后可刷新结果。</p>
       ${
         numberLabels.length
           ? `<div class="result-numbers"><span>本次推演数字</span><div class="number-chips">${numberLabels
@@ -220,6 +227,9 @@ function renderFortune(data, numbers) {
     }
   `
 
+  lastSubmittedNumbers = Array.isArray(numbers) ? [...numbers] : []
+  setResultStale(false)
+
   const copy = document.querySelector('#copy-result-btn')
   copy?.addEventListener('click', () => copyResult(data, numbers, copy))
 }
@@ -263,9 +273,23 @@ function flashCopy(button, text) {
 }
 
 function renderError(message) {
+  lastSubmittedNumbers = []
   resultCard.classList.remove('hidden')
+  resultCard.classList.remove('stale')
   resultCard.classList.add('error')
   resultCard.innerHTML = `<p>${escapeHtml(message)}</p>`
+}
+
+function syncResultState(parsed) {
+  if (resultCard.classList.contains('hidden') || resultCard.classList.contains('error')) return
+  setResultStale(isResultStale(parsed.values, lastSubmittedNumbers, parsed.invalid.length > 0))
+}
+
+function setResultStale(isStale) {
+  resultCard.classList.toggle('stale', isStale)
+  const note = document.querySelector('#result-stale-note')
+  if (!note) return
+  note.classList.toggle('hidden', !isStale)
 }
 
 function escapeHtml(value) {
