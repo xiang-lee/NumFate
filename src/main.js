@@ -1,4 +1,5 @@
 import './style.css'
+import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
@@ -55,12 +56,16 @@ const submitButton = document.querySelector('#submit-btn')
 const feedback = document.querySelector('#input-feedback')
 const resultCard = document.querySelector('#result')
 const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
+const draftStorage = globalThis.localStorage
 let lastSubmittedNumbers = []
+
+input.value = loadDraft(draftStorage)
 
 input.addEventListener('input', () => {
   const parsed = parseInput(input.value)
   renderFeedback(parsed)
   syncResultState(parsed)
+  saveDraft(draftStorage, input.value)
 })
 
 input.addEventListener('keydown', (event) => {
@@ -160,6 +165,7 @@ function applyPreset(id) {
   const parsed = parseInput(input.value)
   renderFeedback(parsed)
   syncResultState(parsed)
+  saveDraft(draftStorage, input.value)
 }
 
 function renderFortune(data, numbers) {

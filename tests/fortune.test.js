@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
+import { loadDraft, saveDraft } from '../src/draft.js'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
@@ -118,6 +119,27 @@ test('presets expose quick-fill examples for the form', () => {
   assert.equal(preset('birthday'), '1994, 07, 16')
   assert.equal(preset('lucky'), '9, 27, 108, 1314')
   assert.equal(preset('missing'), '')
+})
+
+test('saveDraft and loadDraft persist the latest raw input safely', () => {
+  const state = new Map()
+  const storage = {
+    getItem(key) {
+      return state.has(key) ? state.get(key) : null
+    },
+    setItem(key, value) {
+      state.set(key, value)
+    },
+    removeItem(key) {
+      state.delete(key)
+    },
+  }
+
+  saveDraft(storage, '9, 27, 108')
+  assert.equal(loadDraft(storage), '9, 27, 108')
+
+  saveDraft(storage, '')
+  assert.equal(loadDraft(storage), '')
 })
 
 test('isResultStale detects when current input no longer matches shown result', () => {
