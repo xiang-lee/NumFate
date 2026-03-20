@@ -1,6 +1,7 @@
 import './style.css'
 import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
+import { collectMetrics } from './metrics.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
 import { isResultStale } from './result-state.js'
@@ -42,6 +43,7 @@ app.innerHTML = `
           <button type="button" class="preset-btn" data-preset="clear">清空</button>
         </div>
         <p id="input-feedback" class="hint" aria-live="polite">可输入 2-12 个数字，支持逗号、空格或换行分隔。</p>
+        <section id="metric-preview" class="metric-preview hidden" aria-live="polite"></section>
         <button type="submit" id="submit-btn">开启命盘推演</button>
       </form>
 
@@ -54,6 +56,7 @@ const form = document.querySelector('#fortune-form')
 const input = document.querySelector('#numbers')
 const submitButton = document.querySelector('#submit-btn')
 const feedback = document.querySelector('#input-feedback')
+const metricPreview = document.querySelector('#metric-preview')
 const resultCard = document.querySelector('#result')
 const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
 const draftStorage = globalThis.localStorage
@@ -64,6 +67,7 @@ input.value = loadDraft(draftStorage)
 input.addEventListener('input', () => {
   const parsed = parseInput(input.value)
   renderFeedback(parsed)
+  renderMetricPreview(parsed)
   syncResultState(parsed)
   saveDraft(draftStorage, input.value)
 })
@@ -118,6 +122,7 @@ form.addEventListener('submit', async (event) => {
 })
 
 renderFeedback(parseInput(input.value))
+renderMetricPreview(parseInput(input.value))
 
 function toggleLoading(isLoading) {
   submitButton.disabled = isLoading
@@ -159,11 +164,35 @@ function renderFeedback(parsed) {
   feedback.textContent = `已识别 ${count} 个有效数字，可以开始推演；按 Ctrl/Cmd + Enter 可快速推演。`
 }
 
+function renderMetricPreview(parsed) {
+  if (!metricPreview) return
+
+  const values = parsed.values
+  const ready = parsed.invalid.length === 0 && values.length >= 2 && values.length <= 12
+  metricPreview.classList.toggle('hidden', !ready)
+  if (!ready) {
+    metricPreview.innerHTML = ''
+    return
+  }
+
+  const metrics = collectMetrics(values)
+  metricPreview.innerHTML = `
+    <p class="metric-title">命盘速览</p>
+    <div class="metric-grid">
+      ${metricChip('数量', metrics.count)}
+      ${metricChip('总和', formatMetric(metrics.sum))}
+      ${metricChip('数字根', metrics.digitalRoot)}
+      ${metricChip('跨度', formatMetric(metrics.spread))}
+    </div>
+  `
+}
+
 function applyPreset(id) {
   input.value = id === 'clear' ? '' : preset(id)
   input.focus()
   const parsed = parseInput(input.value)
   renderFeedback(parsed)
+  renderMetricPreview(parsed)
   syncResultState(parsed)
   saveDraft(draftStorage, input.value)
 }
@@ -296,6 +325,14 @@ function setResultStale(isStale) {
   const note = document.querySelector('#result-stale-note')
   if (!note) return
   note.classList.toggle('hidden', !isStale)
+}
+
+function metricChip(label, value) {
+  return `<article class="metric-chip"><span>${label}</span><strong>${value}</strong></article>`
+}
+
+function formatMetric(value) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.00$/, '')
 }
 
 function escapeHtml(value) {

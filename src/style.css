@@ -187,6 +187,56 @@ textarea:focus-visible {
   color: #f3a878;
 }
 
+.metric-preview {
+  margin-top: 0.9rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(189, 158, 92, 0.26);
+  border-radius: 14px;
+  background: rgba(10, 19, 39, 0.48);
+}
+
+.metric-preview.hidden {
+  display: none;
+}
+
+.metric-title {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  letter-spacing: 0.08em;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+}
+
+.metric-chip {
+  padding: 0.62rem 0.7rem;
+  border: 1px solid rgba(201, 172, 104, 0.22);
+  border-radius: 12px;
+  background: rgba(7, 14, 29, 0.46);
+}
+
+.metric-chip span,
+.metric-chip strong {
+  display: block;
+}
+
+.metric-chip span {
+  color: #9fadca;
+  font-size: 0.76rem;
+}
+
+.metric-chip strong {
+  margin-top: 0.22rem;
+  color: var(--ink-main);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 button {
   margin-top: 1rem;
   width: 100%;
@@ -366,6 +416,10 @@ ul {
 @media (max-width: 760px) {
   .shell {
     padding-top: 2.3rem;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr;
   }
 
   .result-grid {
