@@ -6,6 +6,7 @@ import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
+import { needsReveal, scrollBehavior } from '../src/reveal.js'
 import { isResultStale } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
 
@@ -140,6 +141,17 @@ test('saveDraft and loadDraft persist the latest raw input safely', () => {
 
   saveDraft(storage, '')
   assert.equal(loadDraft(storage), '')
+})
+
+test('needsReveal detects when the result card is outside the viewport', () => {
+  assert.equal(needsReveal({ top: 20, bottom: 300 }, 640), false)
+  assert.equal(needsReveal({ top: -12, bottom: 300 }, 640), true)
+  assert.equal(needsReveal({ top: 20, bottom: 720 }, 640), true)
+})
+
+test('scrollBehavior respects reduced motion preferences', () => {
+  assert.equal(scrollBehavior(true), 'auto')
+  assert.equal(scrollBehavior(false), 'smooth')
 })
 
 test('isResultStale detects when current input no longer matches shown result', () => {

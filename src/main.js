@@ -4,6 +4,7 @@ import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
+import { needsReveal, scrollBehavior } from './reveal.js'
 import { isResultStale } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
 
@@ -267,6 +268,7 @@ function renderFortune(data, numbers) {
 
   const copy = document.querySelector('#copy-result-btn')
   copy?.addEventListener('click', () => copyResult(data, numbers, copy))
+  revealResultCard()
 }
 
 async function copyResult(data, numbers, button) {
@@ -313,6 +315,7 @@ function renderError(message) {
   resultCard.classList.remove('stale')
   resultCard.classList.add('error')
   resultCard.innerHTML = `<p>${escapeHtml(message)}</p>`
+  revealResultCard()
 }
 
 function syncResultState(parsed) {
@@ -325,6 +328,25 @@ function setResultStale(isStale) {
   const note = document.querySelector('#result-stale-note')
   if (!note) return
   note.classList.toggle('hidden', !isStale)
+}
+
+function revealResultCard() {
+  if (typeof resultCard?.scrollIntoView !== 'function') return
+
+  requestAnimationFrame(() => {
+    const rect = resultCard.getBoundingClientRect()
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
+    if (!needsReveal(rect, viewportHeight)) return
+
+    resultCard.scrollIntoView({
+      behavior: scrollBehavior(prefersReducedMotion()),
+      block: 'start',
+    })
+  })
+}
+
+function prefersReducedMotion() {
+  return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
 }
 
 function metricChip(label, value) {
