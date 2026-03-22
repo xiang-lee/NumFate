@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
+import { parseFortuneResponse } from '../src/api-response.js'
 import { loadDraft, saveDraft } from '../src/draft.js'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
@@ -42,6 +43,44 @@ test('returns 500 when token is missing for valid JSON body', async () => {
 
   assert.equal(response.status, 500)
   assert.equal(payload.error, 'AI token is not configured.')
+})
+
+test('parseFortuneResponse reads successful JSON payloads', async () => {
+  const response = new Response(JSON.stringify({ title: '星河命卷' }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
+
+  const result = await parseFortuneResponse(response)
+
+  assert.deepEqual(result, {
+    payload: { title: '星河命卷' },
+    error: null,
+  })
+})
+
+test('parseFortuneResponse falls back to friendly error for HTML failures', async () => {
+  const response = new Response('<html><body>502 Bad Gateway</body></html>', {
+    status: 502,
+    headers: { 'Content-Type': 'text/html' },
+  })
+
+  const result = await parseFortuneResponse(response)
+
+  assert.equal(result.payload, null)
+  assert.equal(result.error, '命盘服务暂时不可用（502），请稍后再试。')
+})
+
+test('parseFortuneResponse surfaces plain-text API errors', async () => {
+  const response = new Response('Rate limit exceeded', {
+    status: 429,
+    headers: { 'Content-Type': 'text/plain' },
+  })
+
+  const result = await parseFortuneResponse(response)
+
+  assert.equal(result.payload, null)
+  assert.equal(result.error, 'Rate limit exceeded')
 })
 
 test('collectMetrics keeps digital root at 0 when rounded sum is 0', () => {

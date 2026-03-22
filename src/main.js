@@ -1,3 +1,4 @@
+import { parseFortuneResponse } from './api-response.js'
 import './style.css'
 import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
@@ -109,9 +110,9 @@ form.addEventListener('submit', async (event) => {
       body: JSON.stringify({ numbers: values }),
     })
 
-    const payload = await response.json()
-    if (!response.ok) {
-      throw new Error(payload.error || '命盘推演失败，请稍后再试。')
+    const { payload, error } = await parseFortuneResponse(response)
+    if (!response.ok || !payload) {
+      throw new Error(error || '命盘推演失败，请稍后再试。')
     }
 
     renderFortune(payload, values)
