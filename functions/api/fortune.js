@@ -205,7 +205,7 @@ async function requestCompletion({ apiBase, token, model, messages, temperature,
 
   if (!response.ok) {
     const text = await response.text()
-    throw new Error(`AI API error (${response.status}): ${text.slice(0, 200)}`)
+    throw new Error(formatUpstreamError(response.status, text, response.headers.get('content-type') || ''))
   }
 
   const data = await response.json()
@@ -237,6 +237,60 @@ function parseJsonObject(value) {
       return null
     }
   }
+}
+
+function formatUpstreamError(status, text, contentType) {
+  if (status === 408 || status === 504) {
+    return 'AI request timeout. Please retry.'
+  }
+
+  if (status === 401 || status === 403) {
+    return 'AI service is unavailable due to authentication issues. Please retry later.'
+  }
+
+  if (status === 429) {
+    return 'AI service is busy right now. Please retry shortly.'
+  }
+
+  if (status >= 500) {
+    return 'AI service is temporarily unavailable. Please retry.'
+  }
+
+  const message = extractUpstreamMessage(text, contentType)
+  return message ? `AI API error (${status}): ${message}` : `AI API error (${status}). Please retry.`
+}
+
+function extractUpstreamMessage(text, contentType) {
+  const normalized = cleanText(text)
+  if (!normalized || looksLikeHtml(normalized, contentType)) {
+    return ''
+  }
+
+  const parsed = parseJsonValue(text)
+  if (parsed && typeof parsed === 'object') {
+    const message = pickText([
+      parsed.error?.message,
+      parsed.error?.detail,
+      typeof parsed.error === 'string' ? parsed.error : '',
+      parsed.message,
+      parsed.detail,
+    ], 3, 140)
+    if (message) return message
+  }
+
+  return normalized.slice(0, 140)
+}
+
+function parseJsonValue(text) {
+  try {
+    return JSON.parse(String(text || '').trim())
+  } catch {
+    return null
+  }
+}
+
+function looksLikeHtml(text, contentType) {
+  return contentType.includes('text/html') || /<[^>]+>/.test(text)
 }
 
 function normalizeFortune(parsed) {
@@ -370,6 +424,7 @@ function mergedText(parsed) {
 
 export const __testables = {
   collectMetrics,
+  formatUpstreamError,
   sanitizeNumbers,
 }
 

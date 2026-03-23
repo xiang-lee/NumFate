@@ -120,6 +120,24 @@ test('returns 400 when payload relies on boolean or null coercion', async () => 
   assert.equal(payload.error, 'Please provide between 2 and 12 numbers.')
 })
 
+test('formatUpstreamError hides noisy 5xx upstream payloads', () => {
+  const message = __testables.formatUpstreamError(502, '<html><body>Bad Gateway</body></html>', 'text/html')
+
+  assert.equal(message, 'AI service is temporarily unavailable. Please retry.')
+})
+
+test('formatUpstreamError gives a friendly retry message for rate limits', () => {
+  const message = __testables.formatUpstreamError(429, '{"error":{"message":"Too many requests"}}', 'application/json')
+
+  assert.equal(message, 'AI service is busy right now. Please retry shortly.')
+})
+
+test('formatUpstreamError keeps useful 4xx request details', () => {
+  const message = __testables.formatUpstreamError(400, '{"error":{"message":"Prompt is too long"}}', 'application/json')
+
+  assert.equal(message, 'AI API error (400): Prompt is too long')
+})
+
 test('parseInput reports invalid manual entries instead of dropping them', () => {
   const parsed = parseInput('9, abc, 27\n1e3  .5  0x10')
 
