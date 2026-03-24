@@ -8,6 +8,7 @@ import { preset } from './presets.js'
 import { needsReveal, scrollBehavior } from './reveal.js'
 import { isResultStale } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
+import { getSubmitState } from './submit-state.js'
 
 const app = document.querySelector('#app')
 
@@ -62,15 +63,14 @@ const metricPreview = document.querySelector('#metric-preview')
 const resultCard = document.querySelector('#result')
 const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
 const draftStorage = globalThis.localStorage
+let isSubmitting = false
 let lastSubmittedNumbers = []
 
 input.value = loadDraft(draftStorage)
 
 input.addEventListener('input', () => {
   const parsed = parseInput(input.value)
-  renderFeedback(parsed)
-  renderMetricPreview(parsed)
-  syncResultState(parsed)
+  applyParsedState(parsed)
   saveDraft(draftStorage, input.value)
 })
 
@@ -123,12 +123,11 @@ form.addEventListener('submit', async (event) => {
   }
 })
 
-renderFeedback(parseInput(input.value))
-renderMetricPreview(parseInput(input.value))
+applyParsedState(parseInput(input.value))
 
 function toggleLoading(isLoading) {
-  submitButton.disabled = isLoading
-  submitButton.textContent = isLoading ? '命盘推演中...' : '开启命盘推演'
+  isSubmitting = isLoading
+  syncSubmitState(parseInput(input.value))
 }
 
 function formatInvalid(list) {
@@ -189,13 +188,18 @@ function renderMetricPreview(parsed) {
   `
 }
 
+function applyParsedState(parsed) {
+  renderFeedback(parsed)
+  renderMetricPreview(parsed)
+  syncResultState(parsed)
+  syncSubmitState(parsed)
+}
+
 function applyPreset(id) {
   input.value = id === 'clear' ? '' : preset(id)
   input.focus()
   const parsed = parseInput(input.value)
-  renderFeedback(parsed)
-  renderMetricPreview(parsed)
-  syncResultState(parsed)
+  applyParsedState(parsed)
   saveDraft(draftStorage, input.value)
 }
 
@@ -329,6 +333,14 @@ function setResultStale(isStale) {
   const note = document.querySelector('#result-stale-note')
   if (!note) return
   note.classList.toggle('hidden', !isStale)
+}
+
+function syncSubmitState(parsed) {
+  const state = getSubmitState(parsed, isSubmitting)
+  submitButton.disabled = state.disabled
+  submitButton.dataset.loading = state.loading ? 'true' : 'false'
+  submitButton.setAttribute('aria-disabled', String(state.disabled))
+  submitButton.textContent = state.label
 }
 
 function revealResultCard() {

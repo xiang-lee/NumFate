@@ -259,7 +259,16 @@ button:hover {
 
 button:disabled {
   opacity: 0.72;
+  cursor: not-allowed;
+}
+
+button[data-loading='true']:disabled {
   cursor: wait;
+}
+
+button:disabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .result-card {

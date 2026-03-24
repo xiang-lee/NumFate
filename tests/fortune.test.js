@@ -10,6 +10,7 @@ import { ids, preset } from '../src/presets.js'
 import { needsReveal, scrollBehavior } from '../src/reveal.js'
 import { isResultStale } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
+import { getSubmitState } from '../src/submit-state.js'
 
 test('returns 400 when request body is invalid JSON', async () => {
   const context = {
@@ -209,6 +210,38 @@ test('needsReveal detects when the result card is outside the viewport', () => {
 test('scrollBehavior respects reduced motion preferences', () => {
   assert.equal(scrollBehavior(true), 'auto')
   assert.equal(scrollBehavior(false), 'smooth')
+})
+
+test('getSubmitState disables submit until the input is ready', () => {
+  assert.deepEqual(getSubmitState({ values: [], invalid: [] }), {
+    disabled: true,
+    label: '至少输入 2 个数字',
+    loading: false,
+  })
+
+  assert.deepEqual(getSubmitState({ values: [9, 27], invalid: ['abc'] }), {
+    disabled: true,
+    label: '先修正无效项',
+    loading: false,
+  })
+
+  assert.deepEqual(getSubmitState({ values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], invalid: [] }), {
+    disabled: true,
+    label: '最多输入 12 个数字',
+    loading: false,
+  })
+
+  assert.deepEqual(getSubmitState({ values: [9, 27], invalid: [] }), {
+    disabled: false,
+    label: '开启命盘推演',
+    loading: false,
+  })
+
+  assert.deepEqual(getSubmitState({ values: [9, 27], invalid: [] }, true), {
+    disabled: true,
+    label: '命盘推演中...',
+    loading: true,
+  })
 })
 
 test('isResultStale detects when current input no longer matches shown result', () => {
