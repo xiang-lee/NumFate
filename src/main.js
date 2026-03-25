@@ -5,6 +5,7 @@ import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
+import { loadRecentInputs, saveRecentInput } from './recent-inputs.js'
 import { needsReveal, scrollBehavior } from './reveal.js'
 import { isResultStale } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
@@ -45,6 +46,7 @@ app.innerHTML = `
           <button type="button" class="preset-btn" data-preset="work">事业节奏</button>
           <button type="button" class="preset-btn" data-preset="clear">清空</button>
         </div>
+        <section id="recent-inputs" class="recent-inputs hidden" aria-live="polite"></section>
         <p id="input-feedback" class="hint" aria-live="polite">可输入 2-12 个数字，支持逗号、空格或换行分隔。</p>
         <section id="metric-preview" class="metric-preview hidden" aria-live="polite"></section>
         <button type="submit" id="submit-btn">开启命盘推演</button>
@@ -60,6 +62,7 @@ const input = document.querySelector('#numbers')
 const submitButton = document.querySelector('#submit-btn')
 const feedback = document.querySelector('#input-feedback')
 const metricPreview = document.querySelector('#metric-preview')
+const recentInputs = document.querySelector('#recent-inputs')
 const resultCard = document.querySelector('#result')
 const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
 const draftStorage = globalThis.localStorage
@@ -67,6 +70,7 @@ let isSubmitting = false
 let lastSubmittedNumbers = []
 
 input.value = loadDraft(draftStorage)
+renderRecentInputs(loadRecentInputs(draftStorage))
 
 input.addEventListener('input', () => {
   const parsed = parseInput(input.value)
@@ -116,6 +120,7 @@ form.addEventListener('submit', async (event) => {
     }
 
     renderFortune(payload, values)
+    renderRecentInputs(saveRecentInput(draftStorage, values))
   } catch (error) {
     renderError(error.message || '命盘推演失败，请稍后再试。')
   } finally {
@@ -197,6 +202,14 @@ function applyParsedState(parsed) {
 
 function applyPreset(id) {
   input.value = id === 'clear' ? '' : preset(id)
+  input.focus()
+  const parsed = parseInput(input.value)
+  applyParsedState(parsed)
+  saveDraft(draftStorage, input.value)
+}
+
+function applyRecentInput(value) {
+  input.value = value
   input.focus()
   const parsed = parseInput(input.value)
   applyParsedState(parsed)
@@ -341,6 +354,27 @@ function syncSubmitState(parsed) {
   submitButton.dataset.loading = state.loading ? 'true' : 'false'
   submitButton.setAttribute('aria-disabled', String(state.disabled))
   submitButton.textContent = state.label
+}
+
+function renderRecentInputs(entries) {
+  if (!recentInputs) return
+
+  recentInputs.classList.toggle('hidden', entries.length === 0)
+  if (entries.length === 0) {
+    recentInputs.innerHTML = ''
+    return
+  }
+
+  recentInputs.innerHTML = `
+    <p class="recent-title">最近推演</p>
+    <div class="recent-list">
+      ${entries.map((entry) => `<button type="button" class="recent-btn">${escapeHtml(entry)}</button>`).join('')}
+    </div>
+  `
+
+  Array.from(recentInputs.querySelectorAll('.recent-btn')).forEach((button, index) => {
+    button.addEventListener('click', () => applyRecentInput(entries[index]))
+  })
 }
 
 function revealResultCard() {

@@ -179,6 +179,44 @@ textarea:focus-visible {
   box-shadow: 0 7px 18px rgba(64, 105, 168, 0.18);
 }
 
+.recent-inputs {
+  margin-top: 0.9rem;
+}
+
+.recent-inputs.hidden {
+  display: none;
+}
+
+.recent-title {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+
+.recent-btn {
+  width: auto;
+  margin-top: 0;
+  padding: 0.38rem 0.7rem;
+  border-color: rgba(196, 158, 85, 0.34);
+  background: rgba(8, 15, 33, 0.56);
+  color: var(--ink-main);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
+}
+
+.recent-btn:hover {
+  box-shadow: 0 7px 18px rgba(69, 111, 177, 0.16);
+}
+
 .hint-ok {
   color: #b8d7a4;
 }

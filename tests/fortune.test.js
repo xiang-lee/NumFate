@@ -7,6 +7,7 @@ import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
+import { formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
 import { needsReveal, scrollBehavior } from '../src/reveal.js'
 import { isResultStale } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
@@ -178,6 +179,28 @@ test('presets expose quick-fill examples for the form', () => {
   assert.equal(preset('birthday'), '1994, 07, 16')
   assert.equal(preset('lucky'), '9, 27, 108, 1314')
   assert.equal(preset('missing'), '')
+})
+
+test('recent inputs keep latest unique valid submissions', () => {
+  const state = new Map()
+  const storage = {
+    getItem(key) {
+      return state.has(key) ? state.get(key) : null
+    },
+    setItem(key, value) {
+      state.set(key, value)
+    },
+  }
+
+  assert.equal(formatRecentInput([9, 27, 108]), '9, 27, 108')
+  saveRecentInput(storage, [9, 27, 108])
+  saveRecentInput(storage, [3, 8, 21])
+  saveRecentInput(storage, [9, 27, 108])
+  saveRecentInput(storage, [1, 2])
+  saveRecentInput(storage, [5, 13])
+  saveRecentInput(storage, [7, 11])
+
+  assert.deepEqual(loadRecentInputs(storage), ['7, 11', '5, 13', '1, 2', '9, 27, 108'])
 })
 
 test('saveDraft and loadDraft persist the latest raw input safely', () => {
