@@ -32,6 +32,16 @@ export function saveRecentInput(storage, numbers) {
   return next
 }
 
+export function clearRecentInputs(storage) {
+  if (!storage?.removeItem) return []
+
+  try {
+    storage.removeItem(RECENT_INPUTS_KEY)
+  } catch {}
+
+  return []
+}
+
 function sanitizeRecentInputs(value) {
   if (!Array.isArray(value)) return []
 

@@ -5,7 +5,7 @@ import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
-import { loadRecentInputs, saveRecentInput } from './recent-inputs.js'
+import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
 import { needsReveal, scrollBehavior } from './reveal.js'
 import { isResultStale } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
@@ -366,11 +366,18 @@ function renderRecentInputs(entries) {
   }
 
   recentInputs.innerHTML = `
-    <p class="recent-title">最近推演</p>
+    <div class="recent-header">
+      <p class="recent-title">最近推演</p>
+      <button type="button" class="recent-clear">清除记录</button>
+    </div>
     <div class="recent-list">
       ${entries.map((entry) => `<button type="button" class="recent-btn">${escapeHtml(entry)}</button>`).join('')}
     </div>
   `
+
+  recentInputs.querySelector('.recent-clear')?.addEventListener('click', () => {
+    renderRecentInputs(clearRecentInputs(draftStorage))
+  })
 
   Array.from(recentInputs.querySelectorAll('.recent-btn')).forEach((button, index) => {
     button.addEventListener('click', () => applyRecentInput(entries[index]))

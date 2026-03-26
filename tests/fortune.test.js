@@ -7,7 +7,7 @@ import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
-import { formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
+import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
 import { needsReveal, scrollBehavior } from '../src/reveal.js'
 import { isResultStale } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
@@ -190,6 +190,9 @@ test('recent inputs keep latest unique valid submissions', () => {
     setItem(key, value) {
       state.set(key, value)
     },
+    removeItem(key) {
+      state.delete(key)
+    },
   }
 
   assert.equal(formatRecentInput([9, 27, 108]), '9, 27, 108')
@@ -201,6 +204,8 @@ test('recent inputs keep latest unique valid submissions', () => {
   saveRecentInput(storage, [7, 11])
 
   assert.deepEqual(loadRecentInputs(storage), ['7, 11', '5, 13', '1, 2', '9, 27, 108'])
+  assert.deepEqual(clearRecentInputs(storage), [])
+  assert.deepEqual(loadRecentInputs(storage), [])
 })
 
 test('saveDraft and loadDraft persist the latest raw input safely', () => {
