@@ -329,10 +329,18 @@ function flashCopy(button, text) {
 
 function renderError(message) {
   lastSubmittedNumbers = []
+  const canRetry = !getSubmitState(parseInput(input.value)).disabled
   resultCard.classList.remove('hidden')
   resultCard.classList.remove('stale')
   resultCard.classList.add('error')
-  resultCard.innerHTML = `<p>${escapeHtml(message)}</p>`
+  resultCard.innerHTML = `
+    <p>${escapeHtml(message)}</p>
+    ${canRetry ? '<div class="error-actions"><button type="button" class="retry-btn" id="retry-fortune-btn">重新推演</button></div>' : ''}
+  `
+
+  resultCard.querySelector('#retry-fortune-btn')?.addEventListener('click', () => {
+    form.requestSubmit()
+  })
   revealResultCard()
 }
 

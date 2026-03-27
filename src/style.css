@@ -457,6 +457,16 @@ ul {
   color: var(--danger);
 }
 
+.error-actions {
+  margin-top: 0.9rem;
+}
+
+.retry-btn {
+  width: auto;
+  min-width: 9rem;
+  margin-top: 0;
+}
+
 .result-card.stale {
   border-color: rgba(243, 194, 125, 0.78);
 }
