@@ -185,10 +185,13 @@ function renderMetricPreview(parsed) {
   metricPreview.innerHTML = `
     <p class="metric-title">命盘速览</p>
     <div class="metric-grid">
-      ${metricChip('数量', metrics.count)}
       ${metricChip('总和', formatMetric(metrics.sum))}
       ${metricChip('数字根', metrics.digitalRoot)}
+      ${metricChip('均值', formatMetric(metrics.mean))}
+      ${metricChip('中位', formatMetric(metrics.median))}
       ${metricChip('跨度', formatMetric(metrics.spread))}
+      ${metricChip('奇偶', `${metrics.oddCount}:${metrics.evenCount}`)}
+      ${metricChip('质数', metrics.primeCount)}
     </div>
   `
 }

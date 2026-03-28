@@ -99,6 +99,17 @@ test('collectMetrics still computes non-zero digital roots correctly', () => {
   assert.equal(metrics.digitalRoot, 9)
 })
 
+test('collectMetrics exposes richer preview stats for parity and primes', () => {
+  const metrics = __testables.collectMetrics([2, 3, 8, 13])
+
+  assert.equal(metrics.mean, 6.5)
+  assert.equal(metrics.median, 5.5)
+  assert.equal(metrics.spread, 11)
+  assert.equal(metrics.oddCount, 2)
+  assert.equal(metrics.evenCount, 2)
+  assert.equal(metrics.primeCount, 3)
+})
+
 test('sanitizeNumbers keeps numeric strings and rejects coercion-only values', () => {
   const values = __testables.sanitizeNumbers([1, ' 2.5 ', '-3', '', ' ', null, true, false, {}, [], '1e3', '.75'])
 
