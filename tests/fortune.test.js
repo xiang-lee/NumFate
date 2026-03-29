@@ -8,6 +8,7 @@ import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
 import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
+import { buildShareUrl, readSharedInput } from '../src/share-link.js'
 import { needsReveal, scrollBehavior } from '../src/reveal.js'
 import { isResultStale } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
@@ -217,6 +218,12 @@ test('recent inputs keep latest unique valid submissions', () => {
   assert.deepEqual(loadRecentInputs(storage), ['7, 11', '5, 13', '1, 2', '9, 27, 108'])
   assert.deepEqual(clearRecentInputs(storage), [])
   assert.deepEqual(loadRecentInputs(storage), [])
+})
+
+test('share-link helpers restore shared numbers and build stable URLs', () => {
+  assert.equal(readSharedInput('?numbers=9%2C27%2C108'), '9,27,108')
+  assert.equal(readSharedInput('?foo=bar'), '')
+  assert.equal(buildShareUrl('https://numfate.example', '/oracle', [9, 27, 108]), 'https://numfate.example/oracle?numbers=9%2C27%2C108')
 })
 
 test('saveDraft and loadDraft persist the latest raw input safely', () => {

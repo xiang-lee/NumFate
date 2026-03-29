@@ -6,6 +6,7 @@ import { collectMetrics } from './metrics.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
 import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
+import { buildShareUrl, readSharedInput } from './share-link.js'
 import { needsReveal, scrollBehavior } from './reveal.js'
 import { isResultStale } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
@@ -69,7 +70,7 @@ const draftStorage = globalThis.localStorage
 let isSubmitting = false
 let lastSubmittedNumbers = []
 
-input.value = loadDraft(draftStorage)
+input.value = readSharedInput(globalThis.location?.search) || loadDraft(draftStorage)
 renderRecentInputs(loadRecentInputs(draftStorage))
 
 input.addEventListener('input', () => {
@@ -241,6 +242,7 @@ function renderFortune(data, numbers) {
       <p>${escapeHtml(data.overview || '')}</p>
       <div class="result-actions">
         <button type="button" class="copy-btn" id="copy-result-btn">复制命盘结果</button>
+        <button type="button" class="share-btn" id="copy-share-btn">复制分享链接</button>
       </div>
     </div>
 
@@ -289,6 +291,8 @@ function renderFortune(data, numbers) {
 
   const copy = document.querySelector('#copy-result-btn')
   copy?.addEventListener('click', () => copyResult(data, numbers, copy))
+  const share = document.querySelector('#copy-share-btn')
+  share?.addEventListener('click', () => copyShareLink(numbers, share))
   revealResultCard()
 }
 
@@ -302,6 +306,25 @@ async function copyResult(data, numbers, button) {
       fallbackCopy(text)
     }
     flashCopy(button, '已复制')
+  } catch {
+    flashCopy(button, '复制失败')
+  }
+}
+
+async function copyShareLink(numbers, button) {
+  const url = buildShareUrl(globalThis.location?.origin, globalThis.location?.pathname, numbers)
+  if (!url) {
+    flashCopy(button, '暂无链接')
+    return
+  }
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url)
+    } else {
+      fallbackCopy(url)
+    }
+    flashCopy(button, '链接已复制')
   } catch {
     flashCopy(button, '复制失败')
   }

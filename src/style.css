@@ -349,6 +349,9 @@ button:disabled:hover {
 }
 
 .result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
   margin-top: 0.9rem;
 }
 
@@ -406,6 +409,23 @@ button:disabled:hover {
 
 .copy-btn:hover {
   box-shadow: 0 7px 22px rgba(49, 87, 141, 0.22);
+}
+
+.share-btn {
+  width: auto;
+  min-width: 10rem;
+  margin-top: 0;
+  padding: 0.55rem 0.9rem;
+  border-color: rgba(196, 158, 85, 0.32);
+  background: rgba(8, 15, 33, 0.56);
+  color: var(--ink-main);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+}
+
+.share-btn:hover {
+  box-shadow: 0 7px 18px rgba(69, 111, 177, 0.16);
 }
 
 .result-kicker {
