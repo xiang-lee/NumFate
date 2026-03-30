@@ -8,7 +8,7 @@ import { formatFortuneText } from '../src/fortune-text.js'
 import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
 import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
-import { buildShareUrl, readSharedInput } from '../src/share-link.js'
+import { buildSharePath, buildShareUrl, readSharedInput } from '../src/share-link.js'
 import { needsReveal, scrollBehavior } from '../src/reveal.js'
 import { isResultStale } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
@@ -223,6 +223,8 @@ test('recent inputs keep latest unique valid submissions', () => {
 test('share-link helpers restore shared numbers and build stable URLs', () => {
   assert.equal(readSharedInput('?numbers=9%2C27%2C108'), '9,27,108')
   assert.equal(readSharedInput('?foo=bar'), '')
+  assert.equal(buildSharePath('/oracle', '?foo=bar', '#result', [9, 27, 108]), '/oracle?foo=bar&numbers=9%2C27%2C108#result')
+  assert.equal(buildSharePath('/oracle', '?foo=bar&numbers=1%2C2', '#result', []), '/oracle?foo=bar#result')
   assert.equal(buildShareUrl('https://numfate.example', '/oracle', [9, 27, 108]), 'https://numfate.example/oracle?numbers=9%2C27%2C108')
 })
 

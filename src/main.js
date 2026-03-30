@@ -6,7 +6,7 @@ import { collectMetrics } from './metrics.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
 import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
-import { buildShareUrl, readSharedInput } from './share-link.js'
+import { buildSharePath, buildShareUrl, readSharedInput } from './share-link.js'
 import { needsReveal, scrollBehavior } from './reveal.js'
 import { isResultStale } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
@@ -288,6 +288,7 @@ function renderFortune(data, numbers) {
 
   lastSubmittedNumbers = Array.isArray(numbers) ? [...numbers] : []
   setResultStale(false)
+  syncSharePath(numbers)
 
   const copy = document.querySelector('#copy-result-btn')
   copy?.addEventListener('click', () => copyResult(data, numbers, copy))
@@ -416,6 +417,16 @@ function renderRecentInputs(entries) {
   Array.from(recentInputs.querySelectorAll('.recent-btn')).forEach((button, index) => {
     button.addEventListener('click', () => applyRecentInput(entries[index]))
   })
+}
+
+function syncSharePath(numbers) {
+  if (typeof history?.replaceState !== 'function' || !globalThis.location?.pathname) return
+
+  const nextPath = buildSharePath(globalThis.location.pathname, globalThis.location.search, globalThis.location.hash, numbers)
+  const currentPath = `${globalThis.location.pathname}${globalThis.location.search}${globalThis.location.hash}`
+  if (!nextPath || nextPath === currentPath) return
+
+  history.replaceState(history.state, '', nextPath)
 }
 
 function revealResultCard() {
