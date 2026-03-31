@@ -1,5 +1,6 @@
 import { parseFortuneResponse } from './api-response.js'
 import './style.css'
+import { writeClipboard } from './clipboard.js'
 import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
@@ -300,16 +301,8 @@ function renderFortune(data, numbers) {
 async function copyResult(data, numbers, button) {
   const text = formatFortuneText({ ...data, numbers })
 
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text)
-    } else {
-      fallbackCopy(text)
-    }
-    flashCopy(button, '已复制')
-  } catch {
-    flashCopy(button, '复制失败')
-  }
+  const copied = await writeClipboard(text)
+  flashCopy(button, copied ? '已复制' : '复制失败')
 }
 
 async function copyShareLink(numbers, button) {
@@ -319,28 +312,8 @@ async function copyShareLink(numbers, button) {
     return
   }
 
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url)
-    } else {
-      fallbackCopy(url)
-    }
-    flashCopy(button, '链接已复制')
-  } catch {
-    flashCopy(button, '复制失败')
-  }
-}
-
-function fallbackCopy(text) {
-  const area = document.createElement('textarea')
-  area.value = text
-  area.setAttribute('readonly', 'true')
-  area.style.position = 'absolute'
-  area.style.left = '-9999px'
-  document.body.append(area)
-  area.select()
-  document.execCommand('copy')
-  area.remove()
+  const copied = await writeClipboard(url)
+  flashCopy(button, copied ? '链接已复制' : '复制失败')
 }
 
 function flashCopy(button, text) {

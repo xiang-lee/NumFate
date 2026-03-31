@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { parseFortuneResponse } from '../src/api-response.js'
+import { writeClipboard } from '../src/clipboard.js'
 import { loadDraft, saveDraft } from '../src/draft.js'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
@@ -226,6 +227,62 @@ test('share-link helpers restore shared numbers and build stable URLs', () => {
   assert.equal(buildSharePath('/oracle', '?foo=bar', '#result', [9, 27, 108]), '/oracle?foo=bar&numbers=9%2C27%2C108#result')
   assert.equal(buildSharePath('/oracle', '?foo=bar&numbers=1%2C2', '#result', []), '/oracle?foo=bar#result')
   assert.equal(buildShareUrl('https://numfate.example', '/oracle', [9, 27, 108]), 'https://numfate.example/oracle?numbers=9%2C27%2C108')
+})
+
+test('writeClipboard uses navigator clipboard when available', async () => {
+  let written = ''
+  const ok = await writeClipboard('星河命卷', {
+    navigator: {
+      clipboard: {
+        async writeText(value) {
+          written = value
+        },
+      },
+    },
+  })
+
+  assert.equal(ok, true)
+  assert.equal(written, '星河命卷')
+})
+
+test('writeClipboard falls back to execCommand and reports failures', async () => {
+  let appended = false
+  let removed = false
+  const area = {
+    style: {},
+    setAttribute() {},
+    select() {},
+    remove() {
+      removed = true
+    },
+  }
+
+  const ok = await writeClipboard('9,27,108', {
+    navigator: {
+      clipboard: {
+        async writeText() {
+          throw new Error('clipboard unavailable')
+        },
+      },
+    },
+    document: {
+      createElement() {
+        return area
+      },
+      body: {
+        append() {
+          appended = true
+        },
+      },
+      execCommand() {
+        return false
+      },
+    },
+  })
+
+  assert.equal(ok, false)
+  assert.equal(appended, true)
+  assert.equal(removed, true)
 })
 
 test('saveDraft and loadDraft persist the latest raw input safely', () => {
