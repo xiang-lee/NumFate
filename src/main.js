@@ -4,6 +4,7 @@ import { writeClipboard } from './clipboard.js'
 import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
+import { buildNativeSharePayload, canNativeShare, isShareAbort } from './native-share.js'
 import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
 import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
@@ -226,6 +227,8 @@ function renderFortune(data, numbers) {
   const cautions = Array.isArray(data.cautions) ? data.cautions : []
   const sigils = Array.isArray(data.sigils) ? data.sigils : []
   const numberLabels = Array.isArray(numbers) ? numbers.map((item) => escapeHtml(String(item))) : []
+  const nativeSharePayload = buildNativeSharePayload(data, numbers, globalThis.location)
+  const showNativeShare = canNativeShare(nativeSharePayload)
 
   resultCard.classList.remove('hidden', 'error')
   resultCard.innerHTML = `
@@ -244,6 +247,7 @@ function renderFortune(data, numbers) {
       <div class="result-actions">
         <button type="button" class="copy-btn" id="copy-result-btn">复制命盘结果</button>
         <button type="button" class="share-btn" id="copy-share-btn">复制分享链接</button>
+        ${showNativeShare ? '<button type="button" class="native-share-btn" id="native-share-btn">系统分享</button>' : ''}
       </div>
     </div>
 
@@ -295,6 +299,8 @@ function renderFortune(data, numbers) {
   copy?.addEventListener('click', () => copyResult(data, numbers, copy))
   const share = document.querySelector('#copy-share-btn')
   share?.addEventListener('click', () => copyShareLink(numbers, share))
+  const nativeShare = document.querySelector('#native-share-btn')
+  nativeShare?.addEventListener('click', () => shareResult(nativeSharePayload, nativeShare))
   revealResultCard()
 }
 
@@ -314,6 +320,35 @@ async function copyShareLink(numbers, button) {
 
   const copied = await writeClipboard(url)
   flashCopy(button, copied ? '链接已复制' : '复制失败')
+}
+
+async function shareResult(payload, button) {
+  if (!canNativeShare(payload)) {
+    flashCopy(button, '暂不支持')
+    return
+  }
+
+  const prev = button?.textContent || '系统分享'
+  if (button) {
+    button.disabled = true
+    button.textContent = '分享中...'
+  }
+
+  try {
+    await navigator.share(payload)
+    if (button) {
+      button.disabled = false
+      button.textContent = prev
+    }
+    flashCopy(button, '已分享')
+  } catch (error) {
+    if (button) {
+      button.disabled = false
+      button.textContent = prev
+    }
+    if (isShareAbort(error)) return
+    flashCopy(button, '分享失败')
+  }
 }
 
 function flashCopy(button, text) {

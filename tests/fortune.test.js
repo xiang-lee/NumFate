@@ -6,6 +6,7 @@ import { writeClipboard } from '../src/clipboard.js'
 import { loadDraft, saveDraft } from '../src/draft.js'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
+import { buildNativeSharePayload, canNativeShare, isShareAbort } from '../src/native-share.js'
 import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
 import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
@@ -283,6 +284,25 @@ test('writeClipboard falls back to execCommand and reports failures', async () =
   assert.equal(ok, false)
   assert.equal(appended, true)
   assert.equal(removed, true)
+})
+
+test('native share helpers create payloads and respect capability checks', () => {
+  const payload = buildNativeSharePayload(
+    { title: '星河命卷', overview: '今夜适合重新聚焦主线。' },
+    [9, 27, 108],
+    { origin: 'https://numfate.example', pathname: '/oracle' },
+  )
+
+  assert.deepEqual(payload, {
+    title: '星河命卷',
+    text: '推演数字：9, 27, 108\n今夜适合重新聚焦主线。',
+    url: 'https://numfate.example/oracle?numbers=9%2C27%2C108',
+  })
+  assert.equal(canNativeShare(payload, { navigator: { share() {}, canShare: () => true } }), true)
+  assert.equal(canNativeShare(payload, { navigator: { share() {}, canShare: () => false } }), false)
+  assert.equal(canNativeShare(payload, { navigator: { share() {} } }), true)
+  assert.equal(isShareAbort({ name: 'AbortError' }), true)
+  assert.equal(isShareAbort({ name: 'NotAllowedError' }), false)
 })
 
 test('saveDraft and loadDraft persist the latest raw input safely', () => {

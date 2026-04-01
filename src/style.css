@@ -428,6 +428,23 @@ button:disabled:hover {
   box-shadow: 0 7px 18px rgba(69, 111, 177, 0.16);
 }
 
+.native-share-btn {
+  width: auto;
+  min-width: 10rem;
+  margin-top: 0;
+  padding: 0.55rem 0.9rem;
+  border-color: rgba(116, 188, 150, 0.34);
+  background: rgba(13, 40, 31, 0.68);
+  color: #e7f4df;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+}
+
+.native-share-btn:hover {
+  box-shadow: 0 7px 18px rgba(69, 177, 129, 0.18);
+}
+
 .result-kicker {
   margin: 0;
   font-size: 0.82rem;
