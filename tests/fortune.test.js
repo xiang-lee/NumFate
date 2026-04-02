@@ -11,6 +11,7 @@ import { parseInput } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
 import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from '../src/share-link.js'
+import { shareableNumbers } from '../src/share-state.js'
 import { needsReveal, scrollBehavior } from '../src/reveal.js'
 import { isResultStale } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
@@ -228,6 +229,13 @@ test('share-link helpers restore shared numbers and build stable URLs', () => {
   assert.equal(buildSharePath('/oracle', '?foo=bar', '#result', [9, 27, 108]), '/oracle?foo=bar&numbers=9%2C27%2C108#result')
   assert.equal(buildSharePath('/oracle', '?foo=bar&numbers=1%2C2', '#result', []), '/oracle?foo=bar#result')
   assert.equal(buildShareUrl('https://numfate.example', '/oracle', [9, 27, 108]), 'https://numfate.example/oracle?numbers=9%2C27%2C108')
+})
+
+test('shareableNumbers only keeps valid input sets in the share URL', () => {
+  assert.deepEqual(shareableNumbers({ values: [9], invalid: [] }), [])
+  assert.deepEqual(shareableNumbers({ values: [9, 27], invalid: [] }), [9, 27])
+  assert.deepEqual(shareableNumbers({ values: [9, 27], invalid: ['abc'] }), [])
+  assert.deepEqual(shareableNumbers({ values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], invalid: [] }), [])
 })
 
 test('writeClipboard uses navigator clipboard when available', async () => {

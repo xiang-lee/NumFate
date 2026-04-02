@@ -9,6 +9,7 @@ import { parseInput } from './numbers.js'
 import { preset } from './presets.js'
 import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from './share-link.js'
+import { shareableNumbers } from './share-state.js'
 import { needsReveal, scrollBehavior } from './reveal.js'
 import { isResultStale } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
@@ -204,6 +205,7 @@ function applyParsedState(parsed) {
   renderMetricPreview(parsed)
   syncResultState(parsed)
   syncSubmitState(parsed)
+  syncSharePath(shareableNumbers(parsed))
 }
 
 function applyPreset(id) {
@@ -293,7 +295,6 @@ function renderFortune(data, numbers) {
 
   lastSubmittedNumbers = Array.isArray(numbers) ? [...numbers] : []
   setResultStale(false)
-  syncSharePath(numbers)
 
   const copy = document.querySelector('#copy-result-btn')
   copy?.addEventListener('click', () => copyResult(data, numbers, copy))
