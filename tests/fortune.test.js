@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { parseFortuneResponse } from '../src/api-response.js'
-import { writeClipboard } from '../src/clipboard.js'
+import { canReadClipboard, readClipboardText, writeClipboard } from '../src/clipboard.js'
 import { loadDraft, saveDraft } from '../src/draft.js'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
@@ -292,6 +292,33 @@ test('writeClipboard falls back to execCommand and reports failures', async () =
   assert.equal(ok, false)
   assert.equal(appended, true)
   assert.equal(removed, true)
+})
+
+test('clipboard read helpers detect support and read text safely', async () => {
+  assert.equal(canReadClipboard({ navigator: { clipboard: { readText() {} } } }), true)
+  assert.equal(canReadClipboard({ navigator: {} }), false)
+
+  const okText = await readClipboardText({
+    navigator: {
+      clipboard: {
+        async readText() {
+          return '9, 27, 108'
+        },
+      },
+    },
+  })
+  assert.equal(okText, '9, 27, 108')
+
+  const failedText = await readClipboardText({
+    navigator: {
+      clipboard: {
+        async readText() {
+          throw new Error('denied')
+        },
+      },
+    },
+  })
+  assert.equal(failedText, null)
 })
 
 test('native share helpers create payloads and respect capability checks', () => {

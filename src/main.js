@@ -1,6 +1,6 @@
 import { parseFortuneResponse } from './api-response.js'
 import './style.css'
-import { writeClipboard } from './clipboard.js'
+import { canReadClipboard, readClipboardText, writeClipboard } from './clipboard.js'
 import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
@@ -16,6 +16,7 @@ import { isSubmitShortcut } from './shortcut.js'
 import { getSubmitState } from './submit-state.js'
 
 const app = document.querySelector('#app')
+const canPasteFromClipboard = canReadClipboard()
 
 app.innerHTML = `
   <main class="page">
@@ -48,6 +49,7 @@ app.innerHTML = `
           <button type="button" class="preset-btn" data-preset="birthday">生日示例</button>
           <button type="button" class="preset-btn" data-preset="lucky">幸运数字</button>
           <button type="button" class="preset-btn" data-preset="work">事业节奏</button>
+          ${canPasteFromClipboard ? '<button type="button" class="preset-btn paste-btn" id="paste-numbers-btn">读取剪贴板</button>' : ''}
           <button type="button" class="preset-btn" data-preset="clear">清空</button>
         </div>
         <section id="recent-inputs" class="recent-inputs hidden" aria-live="polite"></section>
@@ -69,6 +71,7 @@ const metricPreview = document.querySelector('#metric-preview')
 const recentInputs = document.querySelector('#recent-inputs')
 const resultCard = document.querySelector('#result')
 const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
+const pasteButton = document.querySelector('#paste-numbers-btn')
 const draftStorage = globalThis.localStorage
 let isSubmitting = false
 let lastSubmittedNumbers = []
@@ -91,6 +94,8 @@ input.addEventListener('keydown', (event) => {
 presetButtons.forEach((button) => {
   button.addEventListener('click', () => applyPreset(button.dataset.preset || ''))
 })
+
+pasteButton?.addEventListener('click', () => pasteInput(pasteButton))
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault()
@@ -309,23 +314,23 @@ async function copyResult(data, numbers, button) {
   const text = formatFortuneText({ ...data, numbers })
 
   const copied = await writeClipboard(text)
-  flashCopy(button, copied ? '已复制' : '复制失败')
+  flashAction(button, copied ? '已复制' : '复制失败')
 }
 
 async function copyShareLink(numbers, button) {
   const url = buildShareUrl(globalThis.location?.origin, globalThis.location?.pathname, numbers)
   if (!url) {
-    flashCopy(button, '暂无链接')
+    flashAction(button, '暂无链接')
     return
   }
 
   const copied = await writeClipboard(url)
-  flashCopy(button, copied ? '链接已复制' : '复制失败')
+  flashAction(button, copied ? '链接已复制' : '复制失败')
 }
 
 async function shareResult(payload, button) {
   if (!canNativeShare(payload)) {
-    flashCopy(button, '暂不支持')
+    flashAction(button, '暂不支持')
     return
   }
 
@@ -341,18 +346,49 @@ async function shareResult(payload, button) {
       button.disabled = false
       button.textContent = prev
     }
-    flashCopy(button, '已分享')
+    flashAction(button, '已分享')
   } catch (error) {
     if (button) {
       button.disabled = false
       button.textContent = prev
     }
     if (isShareAbort(error)) return
-    flashCopy(button, '分享失败')
+    flashAction(button, '分享失败')
   }
 }
 
-function flashCopy(button, text) {
+async function pasteInput(button) {
+  const prev = button?.textContent || '读取剪贴板'
+  if (button) {
+    button.disabled = true
+    button.textContent = '读取中...'
+  }
+
+  const text = await readClipboardText()
+  if (button) {
+    button.disabled = false
+    button.textContent = prev
+  }
+
+  if (text === null) {
+    flashAction(button, '读取失败')
+    return
+  }
+
+  if (!text.trim()) {
+    flashAction(button, '剪贴板为空')
+    return
+  }
+
+  input.value = text
+  input.focus()
+  const parsed = parseInput(input.value)
+  applyParsedState(parsed)
+  saveDraft(draftStorage, input.value)
+  flashAction(button, '已粘贴')
+}
+
+function flashAction(button, text) {
   if (!button) return
   const prev = button.textContent
   button.textContent = text
