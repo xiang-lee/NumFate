@@ -169,6 +169,23 @@ test('parseInput keeps all valid entries so the UI can detect overflow before su
   assert.deepEqual(parsed.invalid, [])
 })
 
+test('parseInput accepts common birthday formats as three numbers', () => {
+  assert.deepEqual(parseInput('1994-07-16'), {
+    values: [1994, 7, 16],
+    invalid: [],
+  })
+
+  assert.deepEqual(parseInput('1994/07/16 9, 27'), {
+    values: [1994, 7, 16, 9, 27],
+    invalid: [],
+  })
+
+  assert.deepEqual(parseInput('1994年07月16日'), {
+    values: [1994, 7, 16],
+    invalid: [],
+  })
+})
+
 test('formatFortuneText turns a reading into shareable plain text', () => {
   const text = formatFortuneText({
     title: '星河命卷',
