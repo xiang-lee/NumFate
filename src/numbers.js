@@ -1,5 +1,22 @@
 const numberPattern = /^[+-]?(?:\d+\.?\d*|\.\d+)$/
-const dateLikePattern = /(\d{1,4})\s*(?:年|[-/.])\s*(\d{1,2})\s*(?:月|[-/.])\s*(\d{1,4})(?:\s*日)?/g
+const dateLikePattern = /(\d{2,4})\s*(?:年|[-/.])\s*(\d{1,2})\s*(?:月|[-/.])\s*(\d{1,2})(?:\s*日)?/g
+const fullWidthMap = {
+  '０': '0',
+  '１': '1',
+  '２': '2',
+  '３': '3',
+  '４': '4',
+  '５': '5',
+  '６': '6',
+  '７': '7',
+  '８': '8',
+  '９': '9',
+  '＋': '+',
+  '－': '-',
+  '．': '.',
+  '／': '/',
+}
+const fullWidthPattern = /[０-９＋－．／]/g
 
 export function parseInput(raw) {
   const parts = normalizeInput(raw)
@@ -29,5 +46,7 @@ export function parseInput(raw) {
 }
 
 function normalizeInput(raw) {
-  return String(raw).replace(dateLikePattern, '$1 $2 $3')
+  return String(raw)
+    .replace(fullWidthPattern, (char) => fullWidthMap[char] || char)
+    .replace(dateLikePattern, '$1 $2 $3')
 }

@@ -186,6 +186,23 @@ test('parseInput accepts common birthday formats as three numbers', () => {
   })
 })
 
+test('parseInput normalizes full-width digits and punctuation', () => {
+  assert.deepEqual(parseInput('１９９４－０７－１６'), {
+    values: [1994, 7, 16],
+    invalid: [],
+  })
+
+  assert.deepEqual(parseInput('９，２７，１０８'), {
+    values: [9, 27, 108],
+    invalid: [],
+  })
+
+  assert.deepEqual(parseInput('＋３．５ －２'), {
+    values: [3.5, -2],
+    invalid: [],
+  })
+})
+
 test('formatFortuneText turns a reading into shareable plain text', () => {
   const text = formatFortuneText({
     title: '星河命卷',
