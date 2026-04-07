@@ -366,6 +366,10 @@ button:disabled:hover {
 }
 
 .stale-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
   margin-top: 0.7rem;
   color: #f3c27d;
   font-size: 0.85rem;
@@ -373,6 +377,31 @@ button:disabled:hover {
 
 .stale-note.hidden {
   display: none;
+}
+
+.stale-note span {
+  flex: 1 1 16rem;
+}
+
+.stale-refresh {
+  width: auto;
+  min-width: 9.5rem;
+  margin-top: 0;
+  padding: 0.38rem 0.72rem;
+  border-color: rgba(243, 194, 125, 0.4);
+  background: rgba(60, 36, 11, 0.52);
+  color: #f8dfb4;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.83rem;
+  letter-spacing: 0.03em;
+}
+
+.stale-refresh.hidden {
+  display: none;
+}
+
+.stale-refresh:hover {
+  box-shadow: 0 7px 18px rgba(210, 149, 65, 0.18);
 }
 
 .result-numbers {

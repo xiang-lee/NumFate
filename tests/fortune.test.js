@@ -13,7 +13,7 @@ import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput
 import { buildSharePath, buildShareUrl, readSharedInput } from '../src/share-link.js'
 import { shareableNumbers } from '../src/share-state.js'
 import { needsReveal, scrollBehavior } from '../src/reveal.js'
-import { isResultStale } from '../src/result-state.js'
+import { isResultStale, shouldOfferResultRefresh } from '../src/result-state.js'
 import { isSubmitShortcut } from '../src/shortcut.js'
 import { getSubmitState } from '../src/submit-state.js'
 
@@ -444,6 +444,14 @@ test('isResultStale detects when current input no longer matches shown result', 
   assert.equal(isResultStale([9, 28, 108], [9, 27, 108], false), true)
   assert.equal(isResultStale([9, 27, 108], [9, 27, 108], true), true)
   assert.equal(isResultStale([], [], false), false)
+})
+
+test('shouldOfferResultRefresh only appears for stale and valid current input', () => {
+  assert.equal(shouldOfferResultRefresh(true, { values: [9, 27], invalid: [] }, false), true)
+  assert.equal(shouldOfferResultRefresh(false, { values: [9, 27], invalid: [] }, false), false)
+  assert.equal(shouldOfferResultRefresh(true, { values: [9], invalid: [] }, false), false)
+  assert.equal(shouldOfferResultRefresh(true, { values: [9, 27], invalid: ['abc'] }, false), false)
+  assert.equal(shouldOfferResultRefresh(true, { values: [9, 27], invalid: [] }, true), false)
 })
 
 test('isSubmitShortcut only accepts ctrl/cmd enter without composition or shift', () => {

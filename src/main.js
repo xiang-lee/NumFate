@@ -11,7 +11,7 @@ import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-i
 import { buildSharePath, buildShareUrl, readSharedInput } from './share-link.js'
 import { shareableNumbers } from './share-state.js'
 import { needsReveal, scrollBehavior } from './reveal.js'
-import { isResultStale } from './result-state.js'
+import { isResultStale, shouldOfferResultRefresh } from './result-state.js'
 import { isSubmitShortcut } from './shortcut.js'
 import { getSubmitState } from './submit-state.js'
 
@@ -242,7 +242,10 @@ function renderFortune(data, numbers) {
     <div class="result-header">
       <p class="result-kicker">天机已现</p>
       <h2>${escapeHtml(data.title || '命运之卷')}</h2>
-      <p id="result-stale-note" class="stale-note hidden">输入已变更，当前结果基于上一组数字。重新推演后可刷新结果。</p>
+      <div id="result-stale-note" class="stale-note hidden">
+        <span>输入已变更，当前结果基于上一组数字。重新推演后可刷新结果。</span>
+        <button type="button" class="stale-refresh hidden" id="stale-refresh-btn">推演当前输入</button>
+      </div>
       ${
         numberLabels.length
           ? `<div class="result-numbers"><span>本次推演数字</span><div class="number-chips">${numberLabels
@@ -307,6 +310,8 @@ function renderFortune(data, numbers) {
   share?.addEventListener('click', () => copyShareLink(numbers, share))
   const nativeShare = document.querySelector('#native-share-btn')
   nativeShare?.addEventListener('click', () => shareResult(nativeSharePayload, nativeShare))
+  const staleRefresh = document.querySelector('#stale-refresh-btn')
+  staleRefresh?.addEventListener('click', () => form.requestSubmit())
   revealResultCard()
 }
 
@@ -418,7 +423,9 @@ function renderError(message) {
 
 function syncResultState(parsed) {
   if (resultCard.classList.contains('hidden') || resultCard.classList.contains('error')) return
-  setResultStale(isResultStale(parsed.values, lastSubmittedNumbers, parsed.invalid.length > 0))
+  const stale = isResultStale(parsed.values, lastSubmittedNumbers, parsed.invalid.length > 0)
+  setResultStale(stale)
+  syncStaleRefresh(stale, parsed)
 }
 
 function setResultStale(isStale) {
@@ -426,6 +433,16 @@ function setResultStale(isStale) {
   const note = document.querySelector('#result-stale-note')
   if (!note) return
   note.classList.toggle('hidden', !isStale)
+}
+
+function syncStaleRefresh(isStale, parsed) {
+  const button = document.querySelector('#stale-refresh-btn')
+  if (!button) return
+
+  const show = shouldOfferResultRefresh(isStale, parsed, isSubmitting)
+  button.classList.toggle('hidden', !show)
+  button.disabled = !show
+  button.textContent = isSubmitting ? '推演中...' : '推演当前输入'
 }
 
 function syncSubmitState(parsed) {
