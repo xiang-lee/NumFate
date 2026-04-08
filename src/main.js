@@ -141,7 +141,9 @@ applyParsedState(parseInput(input.value))
 
 function toggleLoading(isLoading) {
   isSubmitting = isLoading
-  syncSubmitState(parseInput(input.value))
+  const parsed = parseInput(input.value)
+  syncSubmitState(parsed)
+  syncResultState(parsed)
 }
 
 function formatInvalid(list) {
@@ -302,7 +304,6 @@ function renderFortune(data, numbers) {
   `
 
   lastSubmittedNumbers = Array.isArray(numbers) ? [...numbers] : []
-  setResultStale(false)
 
   const copy = document.querySelector('#copy-result-btn')
   copy?.addEventListener('click', () => copyResult(data, numbers, copy))
@@ -312,6 +313,7 @@ function renderFortune(data, numbers) {
   nativeShare?.addEventListener('click', () => shareResult(nativeSharePayload, nativeShare))
   const staleRefresh = document.querySelector('#stale-refresh-btn')
   staleRefresh?.addEventListener('click', () => form.requestSubmit())
+  syncResultState(parseInput(input.value))
   revealResultCard()
 }
 
