@@ -53,7 +53,7 @@ app.innerHTML = `
           <button type="button" class="preset-btn" data-preset="clear">清空</button>
         </div>
         <section id="recent-inputs" class="recent-inputs hidden" aria-live="polite"></section>
-        <p id="input-feedback" class="hint" aria-live="polite">可输入 2-12 个数字，支持逗号、空格、换行、全角数字，也支持生日格式如 1994-07-16。</p>
+        <p id="input-feedback" class="hint" aria-live="polite">可输入 2-12 个数字，支持逗号、空格、换行、全角数字、分号，也支持生日格式和带标签内容如 生日：1994-07-16。</p>
         <section id="metric-preview" class="metric-preview hidden" aria-live="polite"></section>
         <button type="submit" id="submit-btn">开启命盘推演</button>
       </form>
@@ -164,7 +164,7 @@ function renderFeedback(parsed) {
   }
 
   if (count === 0) {
-    feedback.textContent = '可输入 2-12 个数字，支持逗号、空格、换行、全角数字，也支持生日格式如 1994-07-16；按 Ctrl/Cmd + Enter 可快速推演。'
+    feedback.textContent = '可输入 2-12 个数字，支持逗号、空格、换行、全角数字、分号，也支持生日格式和带标签内容如 生日：1994-07-16；按 Ctrl/Cmd + Enter 可快速推演。'
     return
   }
 

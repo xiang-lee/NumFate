@@ -203,6 +203,18 @@ test('parseInput normalizes full-width digits and punctuation', () => {
   })
 })
 
+test('parseInput accepts labeled clipboard content and semicolon separators', () => {
+  assert.deepEqual(parseInput('生日：1994-07-16；幸运数字：9，27，108'), {
+    values: [1994, 7, 16, 9, 27, 108],
+    invalid: [],
+  })
+
+  assert.deepEqual(parseInput('Lucky: 9; Work: 21 | Bonus: 34'), {
+    values: [9, 21, 34],
+    invalid: [],
+  })
+})
+
 test('formatFortuneText turns a reading into shareable plain text', () => {
   const text = formatFortuneText({
     title: '星河命卷',
