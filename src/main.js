@@ -5,7 +5,7 @@ import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
 import { buildNativeSharePayload, canNativeShare, isShareAbort } from './native-share.js'
-import { parseInput } from './numbers.js'
+import { parseInput, previewValues } from './numbers.js'
 import { preset } from './presets.js'
 import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from './share-link.js'
@@ -54,6 +54,7 @@ app.innerHTML = `
         </div>
         <section id="recent-inputs" class="recent-inputs hidden" aria-live="polite"></section>
         <p id="input-feedback" class="hint" aria-live="polite">可输入 2-12 个数字，支持逗号、空格、换行、全角数字、分号，也支持生日格式和带标签内容如 生日：1994-07-16。</p>
+        <section id="parsed-preview" class="parsed-preview hidden" aria-live="polite"></section>
         <section id="metric-preview" class="metric-preview hidden" aria-live="polite"></section>
         <button type="submit" id="submit-btn">开启命盘推演</button>
       </form>
@@ -67,6 +68,7 @@ const form = document.querySelector('#fortune-form')
 const input = document.querySelector('#numbers')
 const submitButton = document.querySelector('#submit-btn')
 const feedback = document.querySelector('#input-feedback')
+const parsedPreview = document.querySelector('#parsed-preview')
 const metricPreview = document.querySelector('#metric-preview')
 const recentInputs = document.querySelector('#recent-inputs')
 const resultCard = document.querySelector('#result')
@@ -209,10 +211,31 @@ function renderMetricPreview(parsed) {
 
 function applyParsedState(parsed) {
   renderFeedback(parsed)
+  renderParsedPreview(parsed)
   renderMetricPreview(parsed)
   syncResultState(parsed)
   syncSubmitState(parsed)
   syncSharePath(shareableNumbers(parsed))
+}
+
+function renderParsedPreview(parsed) {
+  if (!parsedPreview) return
+
+  const preview = previewValues(parsed.values)
+  const hasValues = preview.shown.length > 0
+  parsedPreview.classList.toggle('hidden', !hasValues)
+  if (!hasValues) {
+    parsedPreview.innerHTML = ''
+    return
+  }
+
+  parsedPreview.innerHTML = `
+    <p class="parsed-title">当前将按这些数字推演</p>
+    <div class="number-chips">
+      ${preview.shown.map((item) => `<span class="number-chip">${escapeHtml(item)}</span>`).join('')}
+      ${preview.hiddenCount > 0 ? `<span class="number-chip parsed-more">+${preview.hiddenCount}</span>` : ''}
+    </div>
+  `
 }
 
 function applyPreset(id) {

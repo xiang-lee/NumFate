@@ -46,6 +46,14 @@ export function parseInput(raw) {
   return { values, invalid }
 }
 
+export function previewValues(values, limit = 12) {
+  const items = Array.isArray(values) ? values.map((value) => String(value)) : []
+  return {
+    shown: items.slice(0, limit),
+    hiddenCount: Math.max(0, items.length - limit),
+  }
+}
+
 function normalizeInput(raw) {
   return String(raw)
     .replace(fullWidthPattern, (char) => fullWidthMap[char] || char)

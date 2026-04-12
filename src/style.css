@@ -259,6 +259,30 @@ textarea:focus-visible {
   color: #f3a878;
 }
 
+.parsed-preview {
+  margin-top: 0.85rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(196, 158, 85, 0.22);
+  border-radius: 14px;
+  background: rgba(9, 16, 34, 0.42);
+}
+
+.parsed-preview.hidden {
+  display: none;
+}
+
+.parsed-title {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+.parsed-more {
+  border-style: dashed;
+  color: #d9c795;
+}
+
 .metric-preview {
   margin-top: 0.9rem;
   padding: 0.85rem 0.9rem;

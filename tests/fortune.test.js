@@ -7,7 +7,7 @@ import { loadDraft, saveDraft } from '../src/draft.js'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { buildNativeSharePayload, canNativeShare, isShareAbort } from '../src/native-share.js'
-import { parseInput } from '../src/numbers.js'
+import { parseInput, previewValues } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
 import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from '../src/share-link.js'
@@ -212,6 +212,18 @@ test('parseInput accepts labeled clipboard content and semicolon separators', ()
   assert.deepEqual(parseInput('Lucky: 9; Work: 21 | Bonus: 34'), {
     values: [9, 21, 34],
     invalid: [],
+  })
+})
+
+test('previewValues keeps parsed preview compact when too many numbers are present', () => {
+  assert.deepEqual(previewValues([9, 27, 108]), {
+    shown: ['9', '27', '108'],
+    hiddenCount: 0,
+  })
+
+  assert.deepEqual(previewValues([1, 2, 3, 4, 5], 3), {
+    shown: ['1', '2', '3'],
+    hiddenCount: 2,
   })
 })
 
