@@ -7,7 +7,7 @@ import { loadDraft, saveDraft } from '../src/draft.js'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { buildNativeSharePayload, canNativeShare, isShareAbort } from '../src/native-share.js'
-import { parseInput, previewValues } from '../src/numbers.js'
+import { formatValues, parseInput, previewValues } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
 import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from '../src/share-link.js'
@@ -225,6 +225,11 @@ test('previewValues keeps parsed preview compact when too many numbers are prese
     shown: ['1', '2', '3'],
     hiddenCount: 2,
   })
+})
+
+test('formatValues turns parsed numbers into normalized editable text', () => {
+  assert.equal(formatValues([1994, 7, 16, 9, 27, 108]), '1994, 7, 16, 9, 27, 108')
+  assert.equal(formatValues([]), '')
 })
 
 test('formatFortuneText turns a reading into shareable plain text', () => {

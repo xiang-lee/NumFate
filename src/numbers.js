@@ -54,6 +54,10 @@ export function previewValues(values, limit = 12) {
   }
 }
 
+export function formatValues(values) {
+  return Array.isArray(values) ? values.map((value) => String(value)).join(', ') : ''
+}
+
 function normalizeInput(raw) {
   return String(raw)
     .replace(fullWidthPattern, (char) => fullWidthMap[char] || char)

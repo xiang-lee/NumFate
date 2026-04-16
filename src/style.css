@@ -278,6 +278,30 @@ textarea:focus-visible {
   letter-spacing: 0.06em;
 }
 
+.parsed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.parsed-action {
+  width: auto;
+  margin-top: 0;
+  padding: 0.28rem 0.62rem;
+  border-color: rgba(196, 158, 85, 0.28);
+  background: transparent;
+  color: #d7c899;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.parsed-action:hover {
+  box-shadow: none;
+  color: var(--ink-main);
+}
+
 .parsed-more {
   border-style: dashed;
   color: #d9c795;

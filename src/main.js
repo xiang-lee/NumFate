@@ -5,7 +5,7 @@ import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
 import { buildNativeSharePayload, canNativeShare, isShareAbort } from './native-share.js'
-import { parseInput, previewValues } from './numbers.js'
+import { formatValues, parseInput, previewValues } from './numbers.js'
 import { preset } from './presets.js'
 import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from './share-link.js'
@@ -230,12 +230,19 @@ function renderParsedPreview(parsed) {
   }
 
   parsedPreview.innerHTML = `
-    <p class="parsed-title">当前将按这些数字推演</p>
+    <div class="parsed-header">
+      <p class="parsed-title">当前将按这些数字推演</p>
+      <button type="button" class="parsed-action" id="normalize-input-btn">整理为标准格式</button>
+    </div>
     <div class="number-chips">
       ${preview.shown.map((item) => `<span class="number-chip">${escapeHtml(item)}</span>`).join('')}
       ${preview.hiddenCount > 0 ? `<span class="number-chip parsed-more">+${preview.hiddenCount}</span>` : ''}
     </div>
   `
+
+  parsedPreview.querySelector('#normalize-input-btn')?.addEventListener('click', () => {
+    applyNormalizedInput(parsed.values)
+  })
 }
 
 function applyPreset(id) {
@@ -248,6 +255,14 @@ function applyPreset(id) {
 
 function applyRecentInput(value) {
   input.value = value
+  input.focus()
+  const parsed = parseInput(input.value)
+  applyParsedState(parsed)
+  saveDraft(draftStorage, input.value)
+}
+
+function applyNormalizedInput(values) {
+  input.value = formatValues(values)
   input.focus()
   const parsed = parseInput(input.value)
   applyParsedState(parsed)
