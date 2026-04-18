@@ -5,7 +5,7 @@ import { loadDraft, saveDraft } from './draft.js'
 import { formatFortuneText } from './fortune-text.js'
 import { collectMetrics } from './metrics.js'
 import { buildNativeSharePayload, canNativeShare, isShareAbort } from './native-share.js'
-import { formatValues, parseInput, previewValues } from './numbers.js'
+import { describeParsedPreview, formatValues, parseInput } from './numbers.js'
 import { preset } from './presets.js'
 import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from './share-link.js'
@@ -221,7 +221,7 @@ function applyParsedState(parsed) {
 function renderParsedPreview(parsed) {
   if (!parsedPreview) return
 
-  const preview = previewValues(parsed.values)
+  const preview = describeParsedPreview(parsed)
   const hasValues = preview.shown.length > 0
   parsedPreview.classList.toggle('hidden', !hasValues)
   if (!hasValues) {
@@ -232,8 +232,13 @@ function renderParsedPreview(parsed) {
   parsedPreview.innerHTML = `
     <div class="parsed-header">
       <p class="parsed-title">当前将按这些数字推演</p>
-      <button type="button" class="parsed-action" id="normalize-input-btn">整理为标准格式</button>
+      <button type="button" class="parsed-action" id="normalize-input-btn">${preview.actionLabel}</button>
     </div>
+    ${
+      preview.invalidCount > 0
+        ? `<p class="parsed-note">已发现 ${preview.invalidCount} 个无效项，整理后将只保留这些数字。</p>`
+        : ''
+    }
     <div class="number-chips">
       ${preview.shown.map((item) => `<span class="number-chip">${escapeHtml(item)}</span>`).join('')}
       ${preview.hiddenCount > 0 ? `<span class="number-chip parsed-more">+${preview.hiddenCount}</span>` : ''}

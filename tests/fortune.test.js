@@ -7,7 +7,7 @@ import { loadDraft, saveDraft } from '../src/draft.js'
 import { __testables, onRequestPost } from '../functions/api/fortune.js'
 import { formatFortuneText } from '../src/fortune-text.js'
 import { buildNativeSharePayload, canNativeShare, isShareAbort } from '../src/native-share.js'
-import { formatValues, parseInput, previewValues } from '../src/numbers.js'
+import { describeParsedPreview, formatValues, parseInput, previewValues } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
 import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from '../src/share-link.js'
@@ -224,6 +224,22 @@ test('previewValues keeps parsed preview compact when too many numbers are prese
   assert.deepEqual(previewValues([1, 2, 3, 4, 5], 3), {
     shown: ['1', '2', '3'],
     hiddenCount: 2,
+  })
+})
+
+test('describeParsedPreview exposes action text and invalid counts', () => {
+  assert.deepEqual(describeParsedPreview({ values: [9, 27, 108], invalid: [] }), {
+    shown: ['9', '27', '108'],
+    hiddenCount: 0,
+    invalidCount: 0,
+    actionLabel: '整理为标准格式',
+  })
+
+  assert.deepEqual(describeParsedPreview({ values: [9, 27], invalid: ['abc', '??'] }, 1), {
+    shown: ['9'],
+    hiddenCount: 1,
+    invalidCount: 2,
+    actionLabel: '仅保留有效数字',
   })
 })
 

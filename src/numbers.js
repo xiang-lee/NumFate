@@ -54,6 +54,17 @@ export function previewValues(values, limit = 12) {
   }
 }
 
+export function describeParsedPreview(parsed, limit = 12) {
+  const preview = previewValues(parsed?.values, limit)
+  const invalidCount = Array.isArray(parsed?.invalid) ? parsed.invalid.length : 0
+
+  return {
+    ...preview,
+    invalidCount,
+    actionLabel: invalidCount > 0 ? '仅保留有效数字' : '整理为标准格式',
+  }
+}
+
 export function formatValues(values) {
   return Array.isArray(values) ? values.map((value) => String(value)).join(', ') : ''
 }

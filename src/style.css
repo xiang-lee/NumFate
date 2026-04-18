@@ -302,6 +302,13 @@ textarea:focus-visible {
   color: var(--ink-main);
 }
 
+.parsed-note {
+  margin: 0.45rem 0 0;
+  color: #e5c488;
+  font-size: 0.79rem;
+  line-height: 1.6;
+}
+
 .parsed-more {
   border-style: dashed;
   color: #d9c795;
