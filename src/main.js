@@ -222,9 +222,9 @@ function renderParsedPreview(parsed) {
   if (!parsedPreview) return
 
   const preview = describeParsedPreview(parsed)
-  const hasValues = preview.shown.length > 0
-  parsedPreview.classList.toggle('hidden', !hasValues)
-  if (!hasValues) {
+  const hasPreview = preview.shown.length > 0 || preview.invalidCount > 0
+  parsedPreview.classList.toggle('hidden', !hasPreview)
+  if (!hasPreview) {
     parsedPreview.innerHTML = ''
     return
   }
@@ -235,14 +235,20 @@ function renderParsedPreview(parsed) {
       <button type="button" class="parsed-action" id="normalize-input-btn">${preview.actionLabel}</button>
     </div>
     ${
-      preview.invalidCount > 0
+      preview.hasOnlyInvalid
+        ? '<p class="parsed-note">当前没有可用于推演的数字，整理后会清空输入。</p>'
+        : preview.invalidCount > 0
         ? `<p class="parsed-note">已发现 ${preview.invalidCount} 个无效项，整理后将只保留这些数字。</p>`
         : ''
     }
-    <div class="number-chips">
+    ${
+      preview.shown.length > 0
+        ? `<div class="number-chips">
       ${preview.shown.map((item) => `<span class="number-chip">${escapeHtml(item)}</span>`).join('')}
       ${preview.hiddenCount > 0 ? `<span class="number-chip parsed-more">+${preview.hiddenCount}</span>` : ''}
-    </div>
+    </div>`
+        : ''
+    }
   `
 
   parsedPreview.querySelector('#normalize-input-btn')?.addEventListener('click', () => {

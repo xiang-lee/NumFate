@@ -57,11 +57,13 @@ export function previewValues(values, limit = 12) {
 export function describeParsedPreview(parsed, limit = 12) {
   const preview = previewValues(parsed?.values, limit)
   const invalidCount = Array.isArray(parsed?.invalid) ? parsed.invalid.length : 0
+  const hasOnlyInvalid = preview.shown.length === 0 && invalidCount > 0
 
   return {
     ...preview,
     invalidCount,
-    actionLabel: invalidCount > 0 ? '仅保留有效数字' : '整理为标准格式',
+    hasOnlyInvalid,
+    actionLabel: hasOnlyInvalid ? '清空输入' : invalidCount > 0 ? '仅保留有效数字' : '整理为标准格式',
   }
 }
 

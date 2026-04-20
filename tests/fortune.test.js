@@ -232,6 +232,7 @@ test('describeParsedPreview exposes action text and invalid counts', () => {
     shown: ['9', '27', '108'],
     hiddenCount: 0,
     invalidCount: 0,
+    hasOnlyInvalid: false,
     actionLabel: '整理为标准格式',
   })
 
@@ -239,7 +240,16 @@ test('describeParsedPreview exposes action text and invalid counts', () => {
     shown: ['9'],
     hiddenCount: 1,
     invalidCount: 2,
+    hasOnlyInvalid: false,
     actionLabel: '仅保留有效数字',
+  })
+
+  assert.deepEqual(describeParsedPreview({ values: [], invalid: ['abc'] }), {
+    shown: [],
+    hiddenCount: 0,
+    invalidCount: 1,
+    hasOnlyInvalid: true,
+    actionLabel: '清空输入',
   })
 })
 
