@@ -9,7 +9,7 @@ import { formatFortuneText } from '../src/fortune-text.js'
 import { buildNativeSharePayload, canNativeShare, isShareAbort } from '../src/native-share.js'
 import { describeParsedPreview, formatValues, parseInput, previewValues } from '../src/numbers.js'
 import { ids, preset } from '../src/presets.js'
-import { clearRecentInputs, formatRecentInput, loadRecentInputs, saveRecentInput } from '../src/recent-inputs.js'
+import { clearRecentInputs, formatRecentInput, loadRecentInputs, removeRecentInput, saveRecentInput } from '../src/recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from '../src/share-link.js'
 import { shareableNumbers } from '../src/share-state.js'
 import { needsReveal, scrollBehavior } from '../src/reveal.js'
@@ -308,6 +308,8 @@ test('recent inputs keep latest unique valid submissions', () => {
   saveRecentInput(storage, [7, 11])
 
   assert.deepEqual(loadRecentInputs(storage), ['7, 11', '5, 13', '1, 2', '9, 27, 108'])
+  assert.deepEqual(removeRecentInput(storage, '1, 2'), ['7, 11', '5, 13', '9, 27, 108'])
+  assert.deepEqual(loadRecentInputs(storage), ['7, 11', '5, 13', '9, 27, 108'])
   assert.deepEqual(clearRecentInputs(storage), [])
   assert.deepEqual(loadRecentInputs(storage), [])
 })

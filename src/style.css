@@ -218,6 +218,12 @@ textarea:focus-visible {
   margin-top: 0.55rem;
 }
 
+.recent-entry {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
 .recent-btn {
   width: auto;
   margin-top: 0;
@@ -232,6 +238,22 @@ textarea:focus-visible {
 
 .recent-btn:hover {
   box-shadow: 0 7px 18px rgba(69, 111, 177, 0.16);
+}
+
+.recent-remove {
+  width: auto;
+  margin-top: 0;
+  padding: 0.38rem 0.56rem;
+  border-color: rgba(196, 158, 85, 0.22);
+  background: rgba(40, 17, 17, 0.42);
+  color: #dfb79b;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+
+.recent-remove:hover {
+  box-shadow: 0 7px 18px rgba(177, 92, 69, 0.16);
 }
 
 .recent-clear {

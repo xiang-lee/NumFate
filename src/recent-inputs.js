@@ -32,6 +32,29 @@ export function saveRecentInput(storage, numbers) {
   return next
 }
 
+export function removeRecentInput(storage, entry) {
+  const target = typeof entry === 'string' ? entry.trim() : ''
+  if (!target) {
+    return loadRecentInputs(storage)
+  }
+
+  const next = loadRecentInputs(storage).filter((item) => item !== target)
+
+  if (!storage?.setItem || !storage?.removeItem) {
+    return next
+  }
+
+  try {
+    if (next.length > 0) {
+      storage.setItem(RECENT_INPUTS_KEY, JSON.stringify(next))
+    } else {
+      storage.removeItem(RECENT_INPUTS_KEY)
+    }
+  } catch {}
+
+  return next
+}
+
 export function clearRecentInputs(storage) {
   if (!storage?.removeItem) return []
 

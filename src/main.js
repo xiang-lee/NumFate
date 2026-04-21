@@ -7,7 +7,7 @@ import { collectMetrics } from './metrics.js'
 import { buildNativeSharePayload, canNativeShare, isShareAbort } from './native-share.js'
 import { describeParsedPreview, formatValues, parseInput } from './numbers.js'
 import { preset } from './presets.js'
-import { clearRecentInputs, loadRecentInputs, saveRecentInput } from './recent-inputs.js'
+import { clearRecentInputs, loadRecentInputs, removeRecentInput, saveRecentInput } from './recent-inputs.js'
 import { buildSharePath, buildShareUrl, readSharedInput } from './share-link.js'
 import { shareableNumbers } from './share-state.js'
 import { needsReveal, scrollBehavior } from './reveal.js'
@@ -519,7 +519,11 @@ function renderRecentInputs(entries) {
       <button type="button" class="recent-clear">清除记录</button>
     </div>
     <div class="recent-list">
-      ${entries.map((entry) => `<button type="button" class="recent-btn">${escapeHtml(entry)}</button>`).join('')}
+      ${entries
+        .map(
+          (entry) => `<div class="recent-entry"><button type="button" class="recent-btn">${escapeHtml(entry)}</button><button type="button" class="recent-remove" aria-label="移除最近推演 ${escapeHtml(entry)}">移除</button></div>`,
+        )
+        .join('')}
     </div>
   `
 
@@ -529,6 +533,12 @@ function renderRecentInputs(entries) {
 
   Array.from(recentInputs.querySelectorAll('.recent-btn')).forEach((button, index) => {
     button.addEventListener('click', () => applyRecentInput(entries[index]))
+  })
+
+  Array.from(recentInputs.querySelectorAll('.recent-remove')).forEach((button, index) => {
+    button.addEventListener('click', () => {
+      renderRecentInputs(removeRecentInput(draftStorage, entries[index]))
+    })
   })
 }
 
