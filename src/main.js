@@ -232,7 +232,10 @@ function renderParsedPreview(parsed) {
   parsedPreview.innerHTML = `
     <div class="parsed-header">
       <p class="parsed-title">当前将按这些数字推演</p>
-      <button type="button" class="parsed-action" id="normalize-input-btn">${preview.actionLabel}</button>
+      <div class="parsed-actions">
+        ${preview.hasValues ? `<button type="button" class="parsed-action" id="copy-values-btn">${preview.copyLabel}</button>` : ''}
+        <button type="button" class="parsed-action" id="normalize-input-btn">${preview.actionLabel}</button>
+      </div>
     </div>
     ${
       preview.hasOnlyInvalid
@@ -253,6 +256,9 @@ function renderParsedPreview(parsed) {
 
   parsedPreview.querySelector('#normalize-input-btn')?.addEventListener('click', () => {
     applyNormalizedInput(parsed.values)
+  })
+  parsedPreview.querySelector('#copy-values-btn')?.addEventListener('click', () => {
+    copyParsedValues(parsed.values, parsedPreview.querySelector('#copy-values-btn'))
   })
 }
 
@@ -278,6 +284,11 @@ function applyNormalizedInput(values) {
   const parsed = parseInput(input.value)
   applyParsedState(parsed)
   saveDraft(draftStorage, input.value)
+}
+
+async function copyParsedValues(values, button) {
+  const copied = await writeClipboard(formatValues(values))
+  flashAction(button, copied ? '已复制' : '复制失败')
 }
 
 function renderFortune(data, numbers) {

@@ -58,12 +58,15 @@ export function describeParsedPreview(parsed, limit = 12) {
   const preview = previewValues(parsed?.values, limit)
   const invalidCount = Array.isArray(parsed?.invalid) ? parsed.invalid.length : 0
   const hasOnlyInvalid = preview.shown.length === 0 && invalidCount > 0
+  const hasValues = preview.shown.length > 0
 
   return {
     ...preview,
     invalidCount,
     hasOnlyInvalid,
+    hasValues,
     actionLabel: hasOnlyInvalid ? '清空输入' : invalidCount > 0 ? '仅保留有效数字' : '整理为标准格式',
+    copyLabel: invalidCount > 0 ? '复制有效数字' : '复制数字',
   }
 }
 

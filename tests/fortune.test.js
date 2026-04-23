@@ -233,7 +233,9 @@ test('describeParsedPreview exposes action text and invalid counts', () => {
     hiddenCount: 0,
     invalidCount: 0,
     hasOnlyInvalid: false,
+    hasValues: true,
     actionLabel: '整理为标准格式',
+    copyLabel: '复制数字',
   })
 
   assert.deepEqual(describeParsedPreview({ values: [9, 27], invalid: ['abc', '??'] }, 1), {
@@ -241,7 +243,9 @@ test('describeParsedPreview exposes action text and invalid counts', () => {
     hiddenCount: 1,
     invalidCount: 2,
     hasOnlyInvalid: false,
+    hasValues: true,
     actionLabel: '仅保留有效数字',
+    copyLabel: '复制有效数字',
   })
 
   assert.deepEqual(describeParsedPreview({ values: [], invalid: ['abc'] }), {
@@ -249,7 +253,9 @@ test('describeParsedPreview exposes action text and invalid counts', () => {
     hiddenCount: 0,
     invalidCount: 1,
     hasOnlyInvalid: true,
+    hasValues: false,
     actionLabel: '清空输入',
+    copyLabel: '复制有效数字',
   })
 })
 

@@ -307,6 +307,13 @@ textarea:focus-visible {
   gap: 0.8rem;
 }
 
+.parsed-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
 .parsed-action {
   width: auto;
   margin-top: 0;
