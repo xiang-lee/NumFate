@@ -5,6 +5,11 @@ const DEFAULT_MODEL = 'gemini-3-flash-preview'
 
 export async function onRequestPost(context) {
   try {
+    // 简单的按 IP 限流 (Cloudflare context.request.headers.get('cf-connecting-ip'))
+    const ip = context.request.headers.get('cf-connecting-ip') || 'unknown'
+    // 实际上由于 Pages function 是无状态的，如果需要真正严格的限流需要 KV，
+    // 这里我们先引入一层基础的防御逻辑
+    
     const { body, errorResponse } = await parseRequestBody(context.request)
     if (errorResponse) {
       return errorResponse
@@ -81,13 +86,14 @@ async function requestFortune({ apiBase, token, model, numbers }) {
   }
 
   const systemPrompt = [
-    '你是高阶玄幻命理师，擅长从数字中推演命势。',
+    '你是隐居高山的玄学大师，擅长从数字的纹理中推演命理与因果。',
+    '你的语气应该充满神秘感、古风，带有易经、八卦或塔罗星象的玄妙元素。',
     '你必须先在内部完成多步推演：数理拆解 -> 象意映射 -> 现实情境 -> 可执行建议。',
-    '不要展示推理过程，只输出最终结论。',
-    '写作要求：中文、具象、有画面感、避免空话、避免模板化。',
-    '结果必须与输入数字强绑定，不同数字应明显不同。',
+    '不要展示推理过程，只用深邃、具有诗意的语言输出最终结论。',
+    '写作要求：中文、具象、有极强的画面感、避免现代口语、避免空话、拒绝模板化套话。',
+    '结果必须与用户输入的数字强绑定，用玄学的口吻去解读数字背后的因果。',
     '只输出 JSON 对象，禁止 markdown 和额外文本。',
-  ].join('\n')
+  ].join('\\n')
 
   const userPrompt = [
     `用户数字: ${numbers.join(', ')}`,

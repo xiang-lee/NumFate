@@ -59,7 +59,7 @@ app.innerHTML = `
         <button type="submit" id="submit-btn">开启命盘推演</button>
       </form>
 
-      <section id="result" class="result-card hidden" aria-live="polite"></section>
+      <section id="result-card" class="result-card hidden" aria-live="polite"></section>
     </div>
   </main>
 `
@@ -71,7 +71,7 @@ const feedback = document.querySelector('#input-feedback')
 const parsedPreview = document.querySelector('#parsed-preview')
 const metricPreview = document.querySelector('#metric-preview')
 const recentInputs = document.querySelector('#recent-inputs')
-const resultCard = document.querySelector('#result')
+const resultCard = document.querySelector('#result-card')
 const presetButtons = Array.from(document.querySelectorAll('[data-preset]'))
 const pasteButton = document.querySelector('#paste-numbers-btn')
 const draftStorage = globalThis.localStorage
@@ -291,6 +291,8 @@ async function copyParsedValues(values, button) {
   flashAction(button, copied ? '已复制' : '复制失败')
 }
 
+import { generateShareImage, downloadImage } from './utils/share-image.js'
+
 function renderFortune(data, numbers) {
   const blessings = Array.isArray(data.blessings) ? data.blessings : []
   const cautions = Array.isArray(data.cautions) ? data.cautions : []
@@ -318,6 +320,7 @@ function renderFortune(data, numbers) {
       <p>${escapeHtml(data.overview || '')}</p>
       <div class="result-actions">
         <button type="button" class="copy-btn" id="copy-result-btn">复制命盘结果</button>
+        <button type="button" class="share-btn" id="save-image-btn">保存命盘图片</button>
         <button type="button" class="share-btn" id="copy-share-btn">复制分享链接</button>
         ${showNativeShare ? '<button type="button" class="native-share-btn" id="native-share-btn">系统分享</button>' : ''}
       </div>
@@ -367,6 +370,19 @@ function renderFortune(data, numbers) {
 
   const copy = document.querySelector('#copy-result-btn')
   copy?.addEventListener('click', () => copyResult(data, numbers, copy))
+  const saveImg = document.querySelector('#save-image-btn')
+  saveImg?.addEventListener('click', async () => {
+    const originalText = saveImg.innerText
+    saveImg.innerText = '生成中...'
+    const dataUrl = await generateShareImage('result-card')
+    if (dataUrl) {
+      downloadImage(dataUrl, `numfate-${numbers.join('')}.png`)
+      saveImg.innerText = '已保存'
+    } else {
+      saveImg.innerText = '生成失败'
+    }
+    setTimeout(() => { saveImg.innerText = originalText }, 2000)
+  })
   const share = document.querySelector('#copy-share-btn')
   share?.addEventListener('click', () => copyShareLink(numbers, share))
   const nativeShare = document.querySelector('#native-share-btn')
